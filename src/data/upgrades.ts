@@ -1,1 +1,18 @@
-export const upgrades=[{id:'ingredients',name:'Better Ingredients',emoji:'🥬',description:'Fresh, local goodness. All income ×2.',cost:2500,multiplier:2},{id:'service',name:'Fast Service',emoji:'🛎️',description:'A warm welcome, a shorter wait. All income ×1.5.',cost:15000,multiplier:1.5}] as const;
+export const upgrades = [
+  {
+    id: 'ingredients',
+    name: 'Better Ingredients',
+    emoji: '🥬',
+    description: 'Fresh, local goodness. All income ×2.',
+    cost: 2500,
+    multiplier: 2,
+  },
+  {
+    id: 'service',
+    name: 'Fast Service',
+    emoji: '🛎️',
+    description: 'A warm welcome, a shorter wait. All income ×1.5.',
+    cost: 15000,
+    multiplier: 1.5,
+  },
+] as const;

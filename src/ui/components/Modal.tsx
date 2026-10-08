@@ -1,2 +1,58 @@
-import {useEffect,useRef,type ReactNode} from 'react';
-export function Modal({title,children,close}:{title:string;children:ReactNode;close?:()=>void}){const ref=useRef<HTMLDivElement>(null);useEffect(()=>{const previous=document.activeElement as HTMLElement|null;const box=ref.current!;box.querySelector<HTMLElement>('button,textarea')?.focus();const key=(e:KeyboardEvent)=>{if(e.key==='Escape'&&close){e.stopPropagation();close();}if(e.key==='Tab'){const elements=Array.from(box.querySelectorAll<HTMLElement>('button:not(:disabled),textarea,a[href]'));const first=elements[0],last=elements[elements.length-1];if(e.shiftKey&&document.activeElement===first){e.preventDefault();last?.focus();}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first?.focus();}}};box.addEventListener('keydown',key);return()=>{box.removeEventListener('keydown',key);previous?.focus();};},[close]);return <div className="modal-backdrop"><div ref={ref} className="card" role="dialog" aria-modal="true" aria-label={title}><h2>{title}</h2>{children}</div></div>;}
+import { useEffect, useRef, type ReactNode } from 'react';
+export function Modal({
+  title,
+  children,
+  close,
+}: {
+  title: string;
+  children: ReactNode;
+  close?: () => void;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const previous = document.activeElement as HTMLElement | null;
+    const box = ref.current!;
+    box.querySelector<HTMLElement>('button,textarea')?.focus();
+    const key = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && close) {
+        e.stopPropagation();
+        close();
+      }
+      if (e.key === 'Tab') {
+        const elements = Array.from(
+          box.querySelectorAll<HTMLElement>(
+            'button:not(:disabled),textarea,a[href]',
+          ),
+        );
+        const first = elements[0],
+          last = elements[elements.length - 1];
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault();
+          last?.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault();
+          first?.focus();
+        }
+      }
+    };
+    box.addEventListener('keydown', key);
+    return () => {
+      box.removeEventListener('keydown', key);
+      previous?.focus();
+    };
+  }, [close]);
+  return (
+    <div className="modal-backdrop">
+      <div
+        ref={ref}
+        className="card"
+        role="dialog"
+        aria-modal="true"
+        aria-label={title}
+      >
+        <h2>{title}</h2>
+        {children}
+      </div>
+    </div>
+  );
+}

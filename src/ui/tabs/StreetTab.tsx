@@ -1,8 +1,117 @@
-import {useEffect,useRef,useState} from 'react';
-import {createGame} from '../../game/PhaserGame';
-import {useGame} from '../../state/store';
-import {restaurants} from '../../data/restaurants';
-import {totalIncome} from '../../state/economy';
-import {format} from '../../utils/format';
-import type {StreetScene} from '../../game/scenes/StreetScene';
-export function StreetTab(){const host=useRef<HTMLDivElement>(null),scene=useRef<StreetScene>();const [positions,setPositions]=useState<Record<string,{x:number;y:number}>>({});const {data,selected,select,act,now}=useGame();useEffect(()=>{const {game,scene:s}=createGame(host.current!,{select:id=>useGame.getState().select(id),owned:id=>useGame.getState().data.restaurants[id].owned,project:setPositions});scene.current=s;const unsub=useGame.subscribe(()=>s.refresh());return()=>{unsub();game.destroy(true);scene.current=undefined;};},[]);return <div className="street"><div ref={host} className="canvas-host"/><div className="street-heading"><span className="eyebrow">YOUR LITTLE FOOD NEIGHBORHOOD</span><h1>Life tastes better here.</h1><p>Six little restaurants. One big dream.</p></div><div className="map-overlays">{restaurants.map(c=>{const p=positions[c.id],r=data.restaurants[c.id];return p&&<div key={c.id} className={'plot-label '+(selected===c.id?'selected':'')} style={{left:p.x,top:p.y}}>{selected===c.id&&<span className="selection-pin">▼</span>}<button className="building-label" onClick={()=>select(c.id)}>{r.owned?c.name:'For Sale'}<small>{r.owned?`Lv ${r.level} · ${c.emoji}`:`🪙 ${format(c.baseCost)}`}</small></button>{r.owned&&r.register>0&&<button className="coin-bubble" aria-label={`Collect from ${c.name}`} onClick={()=>act('collect',c.id)}>🪙 {format(r.register)}</button>}</div>;})}</div><div className="street-sign">MAPLE STREET <span>✿</span></div><div className="map-controls"><button aria-label="Zoom in" onClick={()=>scene.current?.zoom(1.15)}>+</button><button aria-label="Zoom out" onClick={()=>scene.current?.zoom(1/1.15)}>−</button><button aria-label="Recenter map" onClick={()=>scene.current?.recenter()}>⌖</button></div><div className="street-footer"><div><span className="live-dot"/> YOUR STREET IS GROWING<strong>🪙 {format(totalIncome(data,now))}<small> / sec</small></strong></div><p>{data.coins<12&&data.restaurants.noodle_nook.level===1?'Tap the gold coin bubble to collect your first earnings. Upgrade Noodle Nook for more!':'Drag to explore · Scroll or pinch to zoom · Tap a restaurant to visit'}</p></div></div>;}
+import { useEffect, useRef, useState } from 'react';
+import { createGame } from '../../game/PhaserGame';
+import { useGame } from '../../state/store';
+import { restaurants } from '../../data/restaurants';
+import { totalIncome } from '../../state/economy';
+import { format } from '../../utils/format';
+import type { StreetScene } from '../../game/scenes/StreetScene';
+export function StreetTab() {
+  const host = useRef<HTMLDivElement>(null),
+    scene = useRef<StreetScene>();
+  const [positions, setPositions] = useState<
+    Record<string, { x: number; y: number }>
+  >({});
+  const { data, selected, select, act, now } = useGame();
+  useEffect(() => {
+    const { game, scene: s } = createGame(host.current!, {
+      select: (id) => useGame.getState().select(id),
+      project: setPositions,
+    });
+    scene.current = s;
+    const qa = new URLSearchParams(location.search).get('qa') === '1';
+    if (qa)
+      Object.defineProperty(window, 'restaurantQA', {
+        configurable: true,
+        value: () => ({
+          data: structuredClone(useGame.getState().data),
+          pending: useGame.getState().pending,
+          scene: s.snapshot(),
+        }),
+      });
+    return () => {
+      if (qa) Reflect.deleteProperty(window, 'restaurantQA');
+      game.destroy(true);
+      scene.current = undefined;
+    };
+  }, []);
+  return (
+    <div className="street">
+      <div ref={host} className="canvas-host" />
+      <div className="street-heading">
+        <span className="eyebrow">YOUR LITTLE FOOD NEIGHBORHOOD</span>
+        <h1>Life tastes better here.</h1>
+        <p>Six little restaurants. One big dream.</p>
+      </div>
+      <div className="map-overlays">
+        {restaurants.map((c) => {
+          const p = positions[c.id],
+            r = data.restaurants[c.id];
+          return (
+            p && (
+              <div
+                key={c.id}
+                className={
+                  'plot-label ' + (selected === c.id ? 'selected' : '')
+                }
+                style={{ left: p.x, top: p.y }}
+              >
+                {selected === c.id && <span className="selection-pin">▼</span>}
+                <button className="building-label" onClick={() => select(c.id)}>
+                  {r.owned ? c.name : 'For Sale'}
+                  <small>
+                    {r.owned
+                      ? `Lv ${r.level} · ${c.emoji}`
+                      : `🪙 ${format(c.baseCost)}`}
+                  </small>
+                </button>
+                {r.owned && r.register > 0 && (
+                  <button
+                    className="coin-bubble"
+                    aria-label={`Collect from ${c.name}`}
+                    onClick={() => act('collect', c.id)}
+                  >
+                    🪙 {format(r.register)}
+                  </button>
+                )}
+              </div>
+            )
+          );
+        })}
+      </div>
+      <div className="street-sign">
+        MAPLE STREET <span>✿</span>
+      </div>
+      <div className="map-controls">
+        <button aria-label="Zoom in" onClick={() => scene.current?.zoom(1.15)}>
+          +
+        </button>
+        <button
+          aria-label="Zoom out"
+          onClick={() => scene.current?.zoom(1 / 1.15)}
+        >
+          −
+        </button>
+        <button
+          aria-label="Recenter map"
+          onClick={() => scene.current?.recenter()}
+        >
+          ⌖
+        </button>
+      </div>
+      <div className="street-footer">
+        <div>
+          <span className="live-dot" /> YOUR STREET IS GROWING
+          <strong>
+            🪙 {format(totalIncome(data, now))}
+            <small> / sec</small>
+          </strong>
+        </div>
+        <p>
+          {data.coins < 12 && data.restaurants.noodle_nook.level === 1
+            ? 'Tap the gold coin bubble to collect your first earnings. Upgrade Noodle Nook for more!'
+            : 'Drag to explore · Scroll or pinch to zoom · Tap a restaurant to visit'}
+        </p>
+      </div>
+    </div>
+  );
+}

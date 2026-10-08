@@ -1,8 +1,38 @@
 {
- "building_noodle_nook":{"file":"buildings/noodle_nook.png","anchorX":0.5,"anchorY":1,"scale":1},
- "building_coffee_corner":{"file":"buildings/coffee_corner.png","anchorX":0.5,"anchorY":1,"scale":1},
- "building_sunny_bakery":{"file":"buildings/sunny_bakery.png","anchorX":0.5,"anchorY":1,"scale":1},
- "building_taco_tuesday":{"file":"buildings/taco_tuesday.png","anchorX":0.5,"anchorY":1,"scale":1},
- "building_tomato_basil":{"file":"buildings/tomato_basil.png","anchorX":0.5,"anchorY":1,"scale":1},
- "building_sushi_station":{"file":"buildings/sushi_station.png","anchorX":0.5,"anchorY":1,"scale":1}
+  "building_noodle_nook": {
+    "file": "buildings/noodle_nook.png",
+    "anchorX": 0.5,
+    "anchorY": 1,
+    "scale": 1
+  },
+  "building_coffee_corner": {
+    "file": "buildings/coffee_corner.png",
+    "anchorX": 0.5,
+    "anchorY": 1,
+    "scale": 1
+  },
+  "building_sunny_bakery": {
+    "file": "buildings/sunny_bakery.png",
+    "anchorX": 0.5,
+    "anchorY": 1,
+    "scale": 1
+  },
+  "building_taco_tuesday": {
+    "file": "buildings/taco_tuesday.png",
+    "anchorX": 0.5,
+    "anchorY": 1,
+    "scale": 1
+  },
+  "building_tomato_basil": {
+    "file": "buildings/tomato_basil.png",
+    "anchorX": 0.5,
+    "anchorY": 1,
+    "scale": 1
+  },
+  "building_sushi_station": {
+    "file": "buildings/sushi_station.png",
+    "anchorX": 0.5,
+    "anchorY": 1,
+    "scale": 1
+  }
 }
