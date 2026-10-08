@@ -20,7 +20,7 @@ export function placeholders(scene: Phaser.Scene) {
   };
   for (const [key, color] of Object.entries({
     grass: 0xb7dca0,
-    road: 0xe9d5b5,
+    road: 0xbfc6c8,
     sidewalk: 0xf6e7cf,
     water: 0x7bcbd3,
   }))

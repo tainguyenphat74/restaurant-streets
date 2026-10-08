@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { iso, plots } from '../iso';
+import { decorationLayout, depthAt } from '../world';
 import { loadAssets, metadata, previews } from '../assets';
 import { placeholders } from '../placeholders';
 import { useGame } from '../../state/store';
@@ -64,16 +65,8 @@ export class StreetScene extends Phaser.Scene {
           .setDepth(35);
       }
     }
-    for (let i = 0; i < 26; i++)
-      this.decor(
-        'tree',
-        ((i * 7) % 13) + 0.2,
-        i % 2 ? 1 : 13,
-        0.7 + (i % 3) * 0.1,
-      );
-    for (let i = 2; i < 13; i += 3) {
-      this.decor('lamp', i, 6, 0.65);
-      this.decor('bench', i, 9, 0.7);
+    for (const decoration of decorationLayout(74)) {
+      this.decor(decoration.key, decoration.x, decoration.y, decoration.scale);
     }
     this.outline = this.add.graphics().setDepth(0);
     for (const plot of plots) {
@@ -300,7 +293,7 @@ export class StreetScene extends Phaser.Scene {
           .setOrigin(metadata('walker').anchorX, metadata('walker').anchorY)
           .setScale(metadata('walker').scale)
           .setTint([0xffffff, 0xa4c8df, 0xc4b1d9, 0xffd482][i % 4]);
-      const w = this.add.container(p.x, p.y, [body]).setDepth(40);
+      const w = this.add.container(p.x, p.y, [body]).setDepth(depthAt(p.y));
       this.walkers.push(w);
       if (!this.reduced.matches) {
         this.tweens.add({
@@ -367,6 +360,7 @@ export class StreetScene extends Phaser.Scene {
   }
   update() {
     if (!this.ready) return;
+    for (const walker of this.walkers) walker.setDepth(depthAt(walker.y));
     const c = this.cameras.main,
       key = [c.scrollX, c.scrollY, c.zoom, c.width, c.height].join(':');
     if (key === this.projection) return;
