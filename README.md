@@ -15,7 +15,7 @@ npm run build
 
 `npm run dev` serves the game at http://localhost:5173. `npm run build` produces a static `dist/` directory. This repository does not deploy automatically.
 
-For browser QA, keep the dev server running, install Chromium with `npx playwright install chromium`, then run `npm run test:browser`. Screenshots and other output go to ignored `test-results/`. The script earns its first upgrade in real time, then uses the normal import UI for advanced-state tests; screenshots only show fresh or naturally earned progress.
+For browser QA, keep the dev server running, install Chromium with `npx playwright install chromium`, then run `npm run test:browser`. `node scripts/qa-lifecycle.mjs` adds reduced-motion, scene teardown, invalid-import and blocked-storage checks. Set `QA_URL=http://127.0.0.1:4173` to check a production preview instead. Screenshots and other output go to ignored `test-results/`. The script earns its first upgrade in real time, then uses the normal import UI for advanced-state tests; screenshots only show fresh or naturally earned progress.
 
 ## Playing
 

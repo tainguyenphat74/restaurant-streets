@@ -11,7 +11,9 @@ export function CurrencyBadge({
   return (
     <span className="currency" aria-label={`${label}: ${format(value)}`}>
       <span>{icon}</span>
-      <b>{format(value)}</b>
+      <b key={Math.floor(value)} className="currency-number">
+        {format(value)}
+      </b>
     </span>
   );
 }

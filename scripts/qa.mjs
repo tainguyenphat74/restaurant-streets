@@ -18,13 +18,16 @@ async function fresh(width, height, touch = false) {
     errors.push(e.message);
     console.error('PAGE ERROR', e.message);
   });
-  await page.goto('http://localhost:5173/?qa=1', {
+  await page.goto(`${process.env.QA_URL || 'http://localhost:5173'}/?qa=1`, {
     waitUntil: 'domcontentloaded',
   });
   await page.waitForFunction(() => window.restaurantQA?.().scene.ready);
   return { page, context };
 }
-const snap = (p) => p.evaluate(() => window.restaurantQA());
+const snap = async (p) => {
+  await p.waitForFunction(() => window.restaurantQA?.().scene.ready);
+  return p.evaluate(() => window.restaurantQA());
+};
 const { page, context } = await fresh(1440, 900);
 await page.screenshot({ path: 'test-results/desktop-fresh.png' });
 await expect(
@@ -96,7 +99,7 @@ expect((await snap(page)).data.restaurants.noodle_nook.register).toBe(0);
 await page.close();
 await new Promise((r) => setTimeout(r, 2000));
 const reload = await context.newPage();
-await reload.goto('http://localhost:5173/?qa=1', {
+await reload.goto(`${process.env.QA_URL || 'http://localhost:5173'}/?qa=1`, {
   waitUntil: 'domcontentloaded',
 });
 await expect(

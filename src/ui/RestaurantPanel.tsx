@@ -1,7 +1,7 @@
 import { useGame } from '../state/store';
 import { config } from '../data/restaurants';
 import { income, rating, upgradeCost, customers } from '../state/economy';
-import { previews } from '../game/assets';
+import { previews, metadata } from '../game/assets';
 import { format } from '../utils/format';
 import { Button } from './components/Button';
 import { Pill } from './components/Pill';
@@ -9,6 +9,7 @@ import { StatItem } from './components/StatItem';
 export function RestaurantPanel() {
   const { selected, select, data, act, revenue, now } = useGame();
   if (!selected) return null;
+  const art = metadata('building_' + selected);
   const c = config(selected),
     r = data.restaurants[selected],
     cost = r.owned ? upgradeCost(selected, r.level) : c.baseCost;
@@ -23,7 +24,14 @@ export function RestaurantPanel() {
       </button>
       <div className="preview" style={{ background: c.color + '22' }}>
         {previews[selected] ? (
-          <img src={previews[selected]} alt={c.name} />
+          <img
+            src={previews[selected]}
+            alt={c.name}
+            style={{
+              transform: `scale(${art.scale})`,
+              transformOrigin: `${art.anchorX * 100}% ${art.anchorY * 100}%`,
+            }}
+          />
         ) : (
           <span>{c.emoji}</span>
         )}

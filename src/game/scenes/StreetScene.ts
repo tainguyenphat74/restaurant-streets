@@ -110,7 +110,12 @@ export class StreetScene extends Phaser.Scene {
     }
     for (let i = 0; i < 12; i++)
       this.coins.push(
-        this.add.image(0, 0, 'coin').setDepth(100).setVisible(false),
+        this.add
+          .image(0, 0, 'coin')
+          .setOrigin(metadata('coin').anchorX, metadata('coin').anchorY)
+          .setScale(metadata('coin').scale)
+          .setDepth(100)
+          .setVisible(false),
       );
     const unsubscribe = useGame.subscribe((state, previous) => {
       this.refresh();
@@ -281,12 +286,19 @@ export class StreetScene extends Phaser.Scene {
       20,
       10 + Math.floor(Math.log10(1 + totalIncome(state.data, state.now)) * 2),
     );
+    while (this.walkers.length > count) {
+      const walker = this.walkers.pop()!;
+      this.tweens.killTweensOf(walker);
+      this.tweens.killTweensOf(walker.list);
+      walker.destroy();
+    }
     while (this.walkers.length < count) {
       const i = this.walkers.length,
         p = iso(2 + (i % 10), i % 2 ? 6 : 9),
         body = this.add
           .image(0, 0, 'walker')
-          .setOrigin(0.5, 1)
+          .setOrigin(metadata('walker').anchorX, metadata('walker').anchorY)
+          .setScale(metadata('walker').scale)
           .setTint([0xffffff, 0xa4c8df, 0xc4b1d9, 0xffd482][i % 4]);
       const w = this.add.container(p.x, p.y, [body]).setDepth(40);
       this.walkers.push(w);
@@ -341,7 +353,7 @@ export class StreetScene extends Phaser.Scene {
       w = this.scale.width,
       h = this.scale.height;
     c.setZoom(Math.max(0.5, Math.min(1.25, (w - 100) / 850, (h - 240) / 580)));
-    c.centerOn(w < 768 ? -65 : 0, 365);
+    c.centerOn(0, 365);
   }
   snapshot() {
     const c = this.cameras.main;
