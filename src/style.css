@@ -1,0 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600&family=Nunito:wght@400;600;700;800&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+body { margin:0; background:#FFF8F0; color:#2B2B2B; font-family:Nunito,sans-serif; }
