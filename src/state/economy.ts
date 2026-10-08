@@ -75,6 +75,9 @@ export function netWorth(g: GameData) {
   );
 }
 export function rankings(g: GameData, now: number) {
+  return rankingsForWorth(netWorth(g), now);
+}
+export function rankingsForWorth(worth: number, now: number) {
   return [
     ...competitors.map((c) => ({
       name: c.name,
@@ -83,7 +86,7 @@ export function rankings(g: GameData, now: number) {
         (1 + c.growth * Math.max(0, (now - Date.UTC(2026, 0, 1)) / 1000)),
       player: false,
     })),
-    { name: 'Your Maple Street', worth: netWorth(g), player: true },
+    { name: 'Your Maple Street', worth, player: true },
   ].sort((a, b) => b.worth - a.worth);
 }
 export function integratedIncome(

@@ -26,3 +26,40 @@ Drag the map to pan; use the wheel, two-finger pinch, or +/− buttons to zoom. 
 The game honors reduced motion, supports keyboard buttons and focus-trapped dialogs, and pauses active earnings while hidden. Only managed restaurants earn offline rewards. Registers hold sixty seconds of current income. Offline claims are checkpointed in the save to avoid duplicate rewards on refresh; blocked storage cannot guarantee persistence across reloads.
 
 See [BUILD_SPEC.md](BUILD_SPEC.md) for the implementation contract, architecture, tuning, and asset replacement guide.
+
+## Architecture and tuning
+
+React owns navigation, accessible map labels, panels and dialogs. Phaser owns the isometric canvas, camera, pointer gestures and procedural artwork. `src/game/iso.ts` maps grid coordinates to world pixels; `screenToGrid` reverses that projection after camera transforms have been undone. The scene sends label positions only when its camera changes.
+
+`src/state/store.ts` is the shared Zustand store. UI components select only their displayed state; kitchen cards select stable income and affordability values, and map labels subscribe per restaurant. `src/state/economy.ts` contains pure income, costs, ratings, customers, net worth, rankings and offline calculations. `tick.ts` advances active time, handles visibility, and checkpoints saves. `save.ts` validates versioned localStorage/import data. Import restores saved pending rewards without earning additional elapsed-time rewards; claiming checkpoints the cleared award.
+
+Tune restaurant prices, base income, dishes and colors in `src/data/restaurants.ts`, global upgrades in `src/data/upgrades.ts`, and fictional rivals in `src/data/competitors.ts`. Tune level growth, milestones, manager cost, boost duration and offline limits in `src/state/economy.ts`, then update its tests. Save validation caps levels at 1000, money/registers/pending at `1e100`, gems at one million, and boosts at ten minutes beyond the save timestamp. Parsing does not depend on the current clock, so clock changes do not invalidate backups; future timestamps earn no offline income until time catches up.
+
+## Replacing procedural art with AI artwork
+
+The shipped `public/assets/manifest.json` is `{}`: every texture is generated locally, with no missing-image requests. Generate an isolated sprite using a prompt such as:
+
+> Cozy hand-painted isometric noodle restaurant, warm coral walls, cream awning, tiny plants, soft afternoon light, orthographic 2:1 isometric ground plane, isolated building, no text, no border, transparent background, ground contact at bottom center, consistent scale with a 200 by 230 pixel game sprite.
+
+Export PNG with transparency and remove any baked-in backdrop, for example with the separately installed `rembg` CLI:
+
+```sh
+rembg i noodle-source.png public/assets/buildings/noodle_nook.png
+```
+
+Keep the ground footprint in 2:1 isometric projection (tiles are 128×64; a tall building's entire image need not be 2:1). Crop consistently, preserve transparent margins, and position ground contact at bottom center. Add only files that actually exist. For that file, the exact manifest is:
+
+```json
+{
+  "building_noodle_nook": {
+    "file": "buildings/noodle_nook.png",
+    "anchorX": 0.5,
+    "anchorY": 1,
+    "scale": 1
+  }
+}
+```
+
+Supported keys are `building_noodle_nook`, `building_coffee_corner`, `building_sunny_bakery`, `building_taco_tuesday`, `building_tomato_basil`, `building_sushi_station`, `grass`, `road`, `sidewalk`, `water`, `tree`, `lamp`, `bench`, `walker`, and `coin`. File paths are relative to `public/assets/`. Anchors are normalized image coordinates; `scale` must be positive. Buildings, props, walkers and coins apply the manifest anchor and scale; terrain tiles use centered origins and native size, so supply 128×64 terrain PNGs.
+
+Omitted, invalid or failed keys fall back to procedural textures. Non-terrain fallback anchors are `(0.5, 1)` with scale `1`; terrain defaults are centered. A new empty manifest clears prior presentation metadata. Restaurant panel previews use the loaded texture and the same scale and anchor as the scene (as CSS transform origin). Reload, open the restaurant panel, and check the ground contact, preview and camera zoom at desktop and mobile sizes. `node scripts/qa-assets.mjs` tests an intercepted temporary PNG, custom preview metadata, missing-image fallback and returning to an empty manifest without adding fixture artwork to production.

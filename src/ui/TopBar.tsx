@@ -2,7 +2,8 @@ import { useGame } from '../state/store';
 import { rankings } from '../state/economy';
 import { CurrencyBadge } from './components/CurrencyBadge';
 export function TopBar({ settings }: { settings: () => void }) {
-  const { data, tab, setTab, now } = useGame();
+  const tab = useGame((s) => s.tab);
+  const setTab = useGame((s) => s.setTab);
   return (
     <header className="topbar">
       <a
@@ -38,11 +39,9 @@ export function TopBar({ settings }: { settings: () => void }) {
         ))}
       </nav>
       <div className="wallet">
-        <CurrencyBadge icon="🪙" value={data.coins} label="Coins" />
-        <CurrencyBadge icon="💎" value={data.gems} label="Gems" />
-        <span className="rank">
-          👑 #{rankings(data, now).findIndex((r) => r.player) + 1}
-        </span>
+        <Currency kind="coins" />
+        <Currency kind="gems" />
+        <Rank />
         <button
           className="icon-button"
           aria-label="Settings"
@@ -51,11 +50,38 @@ export function TopBar({ settings }: { settings: () => void }) {
           ⚙
         </button>
       </div>
-      {data.boostUntil > now && (
-        <div className="boost-timer">
-          ⚡ 2× income · {Math.ceil((data.boostUntil - now) / 60000)} min left
-        </div>
-      )}
+      <BoostTimer />
     </header>
   );
+}
+function Currency({ kind }: { kind: 'coins' | 'gems' }) {
+  const value = useGame((s) => s.data[kind]);
+  return (
+    <CurrencyBadge
+      icon={kind === 'coins' ? '🪙' : '💎'}
+      value={value}
+      label={kind === 'coins' ? 'Coins' : 'Gems'}
+    />
+  );
+}
+function Rank() {
+  const rank = useGame(
+    (s) =>
+      rankings(s.data, Math.floor(s.now / 1000) * 1000).findIndex(
+        (r) => r.player,
+      ) + 1,
+  );
+  return (
+    <span className="rank" aria-label={`Rank #${rank} on Maple Street`}>
+      👑 Rank #{rank} on Maple Street
+    </span>
+  );
+}
+function BoostTimer() {
+  const minutes = useGame((s) =>
+    Math.max(0, Math.ceil((s.data.boostUntil - s.now) / 60000)),
+  );
+  return minutes > 0 ? (
+    <div className="boost-timer">⚡ 2× income · {minutes} min left</div>
+  ) : null;
 }

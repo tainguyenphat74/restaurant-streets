@@ -8,6 +8,8 @@ export type Presentation = {
 export const presentation: Record<string, Presentation> = {};
 export const previews: Record<string, string> = {};
 export async function loadAssets(scene: Phaser.Scene) {
+  for (const key of Object.keys(presentation)) delete presentation[key];
+  for (const key of Object.keys(previews)) delete previews[key];
   const abort = new AbortController();
   let stopped = false;
   const stop = () => {

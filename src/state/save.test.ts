@@ -101,3 +101,32 @@ it('rejects invalid ownership, ids, registers, duplicate upgrades and nonfinite 
   expect(parseSave(serialize(fresh(), NaN))).toBeNull();
   expect(parseSave(serialize(fresh(), 0, -1))).toBeNull();
 });
+
+it('rejects outrageous amounts, timestamps, boosts and unknown root state', () => {
+  const base = JSON.parse(serialize(fresh(), 1000));
+  for (const change of [
+    { coins: Number.MAX_VALUE },
+    { pendingOffline: Number.MAX_VALUE },
+    { coins: 1.01e100 },
+    { pendingOffline: 1.01e100 },
+    { gems: 1000001 },
+    { gems: Number.MAX_SAFE_INTEGER },
+    { savedAt: -1 },
+    { savedAt: 0.5 },
+    { savedAt: 8640000000000001 },
+    { boostUntil: Number.MAX_VALUE },
+    { boostUntil: 601001 },
+    { boostUntil: 0.5 },
+    { selected: 'noodle_nook' },
+  ])
+    expect(parseSave(JSON.stringify({ ...base, ...change }))).toBeNull();
+  const g = fresh();
+  g.restaurants.noodle_nook.register = Number.MAX_VALUE;
+  expect(parseSave(serialize(g, 0))).toBeNull();
+  g.restaurants.noodle_nook.register = 1e100;
+  g.coins = 1e100;
+  g.gems = 1000000;
+  g.boostUntil = 600000;
+  expect(parseSave(serialize(g, 0, 1e100))).not.toBeNull();
+  expect(parseSave(serialize(fresh(), 8640000000000000))).not.toBeNull();
+});

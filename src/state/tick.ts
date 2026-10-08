@@ -89,7 +89,7 @@ export function importGame(raw: string) {
       upgrades: saved.upgrades,
       boostUntil: saved.boostUntil,
     },
-    0,
+    saved.pendingOffline ?? 0,
   );
   checkpoint = Date.now();
   hiddenAt = document.hidden ? checkpoint : null;

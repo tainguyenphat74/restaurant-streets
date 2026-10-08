@@ -47,8 +47,8 @@ export function Settings({ close }: { close: () => void }) {
         placeholder="Paste your save JSON here"
       />
       <p className="fine-print">
-        Import replaces your street. Pending offline rewards in an imported
-        backup are discarded to prevent replaying claims.
+        Import replaces your street. Saved pending offline rewards are restored.
+        Import adds no new earnings for time elapsed since the backup.
       </p>
       <Button
         className="secondary"

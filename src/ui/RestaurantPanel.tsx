@@ -1,3 +1,4 @@
+import { useShallow } from 'zustand/react/shallow';
 import { useGame } from '../state/store';
 import { config } from '../data/restaurants';
 import { income, rating, upgradeCost, customers } from '../state/economy';
@@ -7,11 +8,23 @@ import { Button } from './components/Button';
 import { Pill } from './components/Pill';
 import { StatItem } from './components/StatItem';
 export function RestaurantPanel() {
-  const { selected, select, data, act, revenue, now } = useGame();
+  const selected = useGame((s) => s.selected);
+  return selected ? <SelectedRestaurant selected={selected} /> : null;
+}
+function SelectedRestaurant({ selected }: { selected: string }) {
+  const { select, coins, r, act, revenue, rate } = useGame(
+    useShallow((s) => ({
+      select: s.select,
+      coins: s.data.coins,
+      r: s.data.restaurants[selected],
+      act: s.act,
+      revenue: s.revenue[selected] || 0,
+      rate: income(s.data, selected, s.now),
+    })),
+  );
   if (!selected) return null;
   const art = metadata('building_' + selected);
   const c = config(selected),
-    r = data.restaurants[selected],
     cost = r.owned ? upgradeCost(selected, r.level) : c.baseCost;
   return (
     <aside className="restaurant-panel card" aria-label={c.name}>
@@ -53,13 +66,13 @@ export function RestaurantPanel() {
         </span>
         <strong>
           {r.owned
-            ? `${format(income(data, selected, now))} 🪙 / sec`
+            ? `${format(rate)} 🪙 / sec`
             : `${format(c.baseIncome)} base 🪙 / sec`}
         </strong>
       </div>
       <Button
         className="w-full"
-        disabled={data.coins < cost || r.level >= 1000}
+        disabled={coins < cost || r.level >= 1000}
         onClick={() => act('upgrade', selected)}
       >
         {r.owned ? 'Upgrade restaurant' : 'Buy restaurant'}{' '}
@@ -80,13 +93,10 @@ export function RestaurantPanel() {
               : '🛎 Needs a manager · Collect coins by hand'}
           </p>
           <div className="stats">
-            <StatItem
-              label="Session revenue"
-              value={format(revenue[selected] || 0)}
-            />
+            <StatItem label="Session revenue" value={format(revenue)} />
             <StatItem
               label="Customers"
-              value={format(customers(revenue[selected] || 0, selected))}
+              value={format(customers(revenue, selected))}
             />
             <StatItem label="Rating" value={rating(r.level).toFixed(1)} />
           </div>

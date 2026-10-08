@@ -1,3 +1,4 @@
+import { useShallow } from 'zustand/react/shallow';
 import { useEffect, useRef, useState } from 'react';
 import { createGame } from '../../game/PhaserGame';
 import { useGame } from '../../state/store';
@@ -11,7 +12,7 @@ export function StreetTab() {
   const [positions, setPositions] = useState<
     Record<string, { x: number; y: number }>
   >({});
-  const { data, selected, select, act, now } = useGame();
+
   useEffect(() => {
     const { game, scene: s } = createGame(host.current!, {
       select: (id) => useGame.getState().select(id),
@@ -43,40 +44,12 @@ export function StreetTab() {
         <p>Six little restaurants. One big dream.</p>
       </div>
       <div className="map-overlays">
-        {restaurants.map((c) => {
-          const p = positions[c.id],
-            r = data.restaurants[c.id];
-          return (
-            p && (
-              <div
-                key={c.id}
-                className={
-                  'plot-label ' + (selected === c.id ? 'selected' : '')
-                }
-                style={{ left: p.x, top: p.y }}
-              >
-                {selected === c.id && <span className="selection-pin">▼</span>}
-                <button className="building-label" onClick={() => select(c.id)}>
-                  {r.owned ? c.name : 'For Sale'}
-                  <small>
-                    {r.owned
-                      ? `Lv ${r.level} · ${c.emoji}`
-                      : `🪙 ${format(c.baseCost)}`}
-                  </small>
-                </button>
-                {r.owned && r.register > 0 && (
-                  <button
-                    className="coin-bubble"
-                    aria-label={`Collect from ${c.name}`}
-                    onClick={() => act('collect', c.id)}
-                  >
-                    🪙 {format(r.register)}
-                  </button>
-                )}
-              </div>
-            )
-          );
-        })}
+        {restaurants.map(
+          (c) =>
+            positions[c.id] && (
+              <PlotLabel key={c.id} id={c.id} position={positions[c.id]} />
+            ),
+        )}
       </div>
       <div className="street-sign">
         MAPLE STREET <span>✿</span>
@@ -98,20 +71,72 @@ export function StreetTab() {
           ⌖
         </button>
       </div>
-      <div className="street-footer">
-        <div>
-          <span className="live-dot" /> YOUR STREET IS GROWING
-          <strong>
-            🪙 {format(totalIncome(data, now))}
-            <small> / sec</small>
-          </strong>
-        </div>
-        <p>
-          {data.coins < 12 && data.restaurants.noodle_nook.level === 1
-            ? 'Tap the gold coin bubble to collect your first earnings. Upgrade Noodle Nook for more!'
-            : 'Drag to explore · Scroll or pinch to zoom · Tap a restaurant to visit'}
-        </p>
+      <StreetFooter />
+    </div>
+  );
+}
+function StreetFooter() {
+  const rate = useGame((s) => totalIncome(s.data, s.now));
+  const first = useGame(
+    (s) => s.data.coins < 12 && s.data.restaurants.noodle_nook.level === 1,
+  );
+  return (
+    <div className="street-footer">
+      <div>
+        <span className="live-dot" /> YOUR STREET IS GROWING
+        <strong>
+          🪙 {format(rate)}
+          <small> / sec</small>
+        </strong>
       </div>
+      <p>
+        {first
+          ? 'Tap the gold coin bubble to collect your first earnings. Upgrade Noodle Nook for more!'
+          : 'Drag to explore · Scroll or pinch to zoom · Tap a restaurant to visit'}
+      </p>
+    </div>
+  );
+}
+
+function PlotLabel({
+  id,
+  position,
+}: {
+  id: string;
+  position: { x: number; y: number };
+}) {
+  const c = restaurants.find((c) => c.id === id)!;
+  const { owned, level, register, selected, select, act } = useGame(
+    useShallow((s) => ({
+      owned: s.data.restaurants[id].owned,
+      level: s.data.restaurants[id].level,
+      register: s.data.restaurants[id].register,
+      selected: s.selected === id,
+      select: s.select,
+      act: s.act,
+    })),
+  );
+  return (
+    <div
+      className={'plot-label ' + (selected ? 'selected' : '')}
+      style={{ left: position.x, top: position.y }}
+    >
+      {selected && <span className="selection-pin">▼</span>}
+      <button className="building-label" onClick={() => select(id)}>
+        {owned ? c.name : 'For Sale'}
+        <small>
+          {owned ? `Lv ${level} · ${c.emoji}` : `🪙 ${format(c.baseCost)}`}
+        </small>
+      </button>
+      {owned && register > 0 && (
+        <button
+          className="coin-bubble"
+          aria-label={`Collect from ${c.name}`}
+          onClick={() => act('collect', id)}
+        >
+          🪙 {format(register)}
+        </button>
+      )}
     </div>
   );
 }

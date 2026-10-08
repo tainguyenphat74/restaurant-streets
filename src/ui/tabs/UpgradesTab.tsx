@@ -1,10 +1,19 @@
+import { useShallow } from 'zustand/react/shallow';
 import { useGame } from '../../state/store';
 import { upgrades } from '../../data/upgrades';
 import { format } from '../../utils/format';
 import { Card } from '../components/Card';
 import { Button } from '../components/Button';
 export function UpgradesTab() {
-  const { data, act, now } = useGame();
+  const { coins, gems, purchased, boosted, act } = useGame(
+    useShallow((s) => ({
+      coins: s.data.coins,
+      gems: s.data.gems,
+      purchased: s.data.upgrades,
+      boosted: s.data.boostUntil > s.now,
+      act: s.act,
+    })),
+  );
   return (
     <div className="page">
       <span className="eyebrow">SMALL CHANGES, BIG POSSIBILITIES</span>
@@ -17,10 +26,10 @@ export function UpgradesTab() {
             <h2>{u.name}</h2>
             <p>{u.description}</p>
             <Button
-              disabled={data.upgrades.includes(u.id) || data.coins < u.cost}
+              disabled={purchased.includes(u.id) || coins < u.cost}
               onClick={() => act('global', u.id)}
             >
-              {data.upgrades.includes(u.id)
+              {purchased.includes(u.id)
                 ? '✓ Purchased'
                 : `Buy upgrade · 🪙 ${format(u.cost)}`}
             </Button>
@@ -34,12 +43,10 @@ export function UpgradesTab() {
             10, 25, 50 and 100.
           </p>
           <Button
-            disabled={data.gems < 10 || data.boostUntil > now}
+            disabled={gems < 10 || boosted}
             onClick={() => act('boost', '')}
           >
-            {data.boostUntil > now
-              ? '⚡ Boost active'
-              : 'Start rush hour · 💎 10'}
+            {boosted ? '⚡ Boost active' : 'Start rush hour · 💎 10'}
           </Button>
         </Card>
       </div>

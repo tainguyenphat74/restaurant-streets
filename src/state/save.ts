@@ -9,18 +9,39 @@ export type Save = GameData & {
 };
 export type StorageLike = Pick<Storage, 'getItem' | 'setItem' | 'removeItem'>;
 const validNumber = (n: unknown) =>
-  typeof n === 'number' && Number.isFinite(n) && n >= 0;
+  typeof n === 'number' && Number.isFinite(n) && n >= 0 && n <= 1e100;
+const validTimestamp = (n: unknown) =>
+  validNumber(n) &&
+  Number.isSafeInteger(n) &&
+  (n as number) <= 8640000000000000;
 export function parseSave(json: string): Save | null {
   try {
     const v = JSON.parse(json);
     if (
       !v ||
+      typeof v !== 'object' ||
+      Array.isArray(v) ||
+      Object.keys(v).some(
+        (key) =>
+          ![
+            'version',
+            'savedAt',
+            'coins',
+            'gems',
+            'boostUntil',
+            'restaurants',
+            'upgrades',
+            'pendingOffline',
+          ].includes(key),
+      ) ||
       v.version !== 1 ||
-      !validNumber(v.savedAt) ||
+      !validTimestamp(v.savedAt) ||
       !validNumber(v.coins) ||
       !validNumber(v.gems) ||
-      !Number.isInteger(v.gems) ||
-      !validNumber(v.boostUntil) ||
+      !Number.isSafeInteger(v.gems) ||
+      v.gems > 1000000 ||
+      !validTimestamp(v.boostUntil) ||
+      (v.boostUntil !== 0 && v.boostUntil > v.savedAt + 600000) ||
       !v.restaurants ||
       typeof v.restaurants !== 'object' ||
       Array.isArray(v.restaurants) ||

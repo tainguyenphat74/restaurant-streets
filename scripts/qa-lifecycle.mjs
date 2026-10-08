@@ -57,6 +57,35 @@ try {
   ).toBeVisible();
   await page.keyboard.press('Escape');
   await expect(page.getByRole('dialog')).toHaveCount(0);
+  const fixture = await page.evaluate(() => window.restaurantQA().data);
+  await page.getByRole('button', { name: 'Settings', exact: true }).click();
+  await page
+    .getByLabel('Import a saved street')
+    .fill(
+      JSON.stringify({
+        ...fixture,
+        version: 1,
+        savedAt: 0,
+        pendingOffline: 75,
+      }),
+    );
+  await page.getByRole('button', { name: 'Restore save' }).click();
+  await page.getByRole('button', { name: 'Back to the neighborhood' }).click();
+  await expect(
+    page.getByRole('button', { name: 'Collect earnings', exact: true }),
+  ).toBeVisible();
+  await page.reload();
+  await page.waitForFunction(() => window.restaurantQA?.().scene.ready);
+  expect(await page.evaluate(() => window.restaurantQA().pending)).toBe(75);
+  await page
+    .getByRole('button', { name: 'Collect earnings', exact: true })
+    .click();
+  await page.reload();
+  await page.waitForFunction(() => window.restaurantQA?.().scene.ready);
+  expect(await page.evaluate(() => window.restaurantQA().pending)).toBe(0);
+  expect(await page.evaluate(() => window.restaurantQA().data.coins)).toBe(
+    fixture.coins + 75,
+  );
   expect(errors).toEqual([]);
   await context.close();
   const blocked = await browser.newContext();
@@ -74,7 +103,7 @@ try {
   ).toBeVisible();
   await blocked.close();
   console.log(
-    'PASS: reduced motion, rapid tab teardown during asset fetch, single canvas, canvas building selection, invalid import, Escape, blocked storage.',
+    'PASS: reduced motion, rapid tab teardown during asset fetch, single canvas, canvas building selection, invalid import, Escape, imported pending reward/refresh/claim, blocked storage.',
   );
 } finally {
   await browser.close();

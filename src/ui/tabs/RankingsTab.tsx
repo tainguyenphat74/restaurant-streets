@@ -1,9 +1,10 @@
 import { useGame } from '../../state/store';
-import { rankings } from '../../state/economy';
+import { rankingsForWorth, netWorth } from '../../state/economy';
 import { format } from '../../utils/format';
 import { Card } from '../components/Card';
 export function RankingsTab() {
-  const { data, now } = useGame();
+  const worth = useGame((s) => netWorth(s.data));
+  const now = useGame((s) => Math.floor(s.now / 1000) * 1000);
   return (
     <div className="page rankings">
       <span className="eyebrow">A FRIENDLY NEIGHBORHOOD RIVALRY</span>
@@ -17,7 +18,7 @@ export function RankingsTab() {
           <span>RESTAURATEUR</span>
           <span>NET WORTH</span>
         </div>
-        {rankings(data, now).map((r, i) => (
+        {rankingsForWorth(worth, now).map((r, i) => (
           <div
             className={'leaderboard-row ' + (r.player ? 'you' : '')}
             key={r.name}

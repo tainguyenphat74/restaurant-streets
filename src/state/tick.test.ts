@@ -1,8 +1,14 @@
 import { afterEach, expect, it, vi } from 'vitest';
 import { fresh } from './economy';
 import { useGame } from './store';
-import { claimOffline, importGame, resetGame, startClock } from './tick';
-import { serialize } from './save';
+import {
+  claimOffline,
+  exportGame,
+  importGame,
+  resetGame,
+  startClock,
+} from './tick';
+import { serialize, load } from './save';
 afterEach(() => {
   vi.unstubAllGlobals();
   vi.useRealTimers();
@@ -22,7 +28,7 @@ function environment() {
   vi.stubGlobal('document', doc);
   return { win, doc };
 }
-it('claims exactly once and imports atomically without pending replay', () => {
+it('claims exactly once and imports atomically with saved pending rewards', () => {
   environment();
   useGame.getState().restore(fresh(), 25);
   claimOffline();
@@ -31,8 +37,19 @@ it('claims exactly once and imports atomically without pending replay', () => {
   expect(useGame.getState().pending).toBe(0);
   expect(importGame('broken')).toBe(false);
   expect(useGame.getState().data.coins).toBe(25);
-  expect(importGame(serialize(fresh(), 0, 900))).toBe(true);
-  expect(useGame.getState().pending).toBe(0);
+  useGame.getState().restore(fresh(), 900);
+  const backup = exportGame();
+  useGame.getState().restore(fresh());
+  expect(importGame(backup)).toBe(true);
+  expect(useGame.getState().pending).toBe(900);
+  const restored = load(Date.now());
+  expect(restored.pending).toBe(900);
+  useGame.getState().restore(restored.data, restored.pending);
+  claimOffline();
+  claimOffline();
+  expect(useGame.getState().data.coins).toBe(900);
+  expect(load(Date.now()).pending).toBe(0);
+  expect(load(Date.now()).data.coins).toBe(900);
   resetGame();
   expect(useGame.getState().data).toEqual(fresh());
 });
@@ -60,4 +77,13 @@ it('pauses hidden ticks, checkpoints offline, and removes listeners on cleanup',
   now = 13000;
   vi.advanceTimersByTime(20000);
   expect(useGame.getState().data).toBe(data);
+});
+
+it('imports managed backups without generating elapsed offline earnings', () => {
+  environment();
+  const g = fresh();
+  g.restaurants.noodle_nook.hasManager = true;
+  expect(importGame(serialize(g, 0, 123))).toBe(true);
+  expect(useGame.getState().pending).toBe(123);
+  expect(useGame.getState().data.coins).toBe(0);
 });

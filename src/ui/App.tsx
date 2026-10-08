@@ -1,3 +1,4 @@
+import { useShallow } from 'zustand/react/shallow';
 import { useEffect, useState, useCallback } from 'react';
 import { useGame } from '../state/store';
 import { startClock, claimOffline } from '../state/tick';
@@ -13,7 +14,14 @@ import { Modal } from './components/Modal';
 import { Toasts } from './components/Toasts';
 import { Button } from './components/Button';
 export function App() {
-  const { tab, select, pending, storageError } = useGame();
+  const { tab, select, pending, storageError } = useGame(
+    useShallow((s) => ({
+      tab: s.tab,
+      select: s.select,
+      pending: s.pending,
+      storageError: s.storageError,
+    })),
+  );
   const [settings, setSettings] = useState(false);
   const close = useCallback(() => setSettings(false), []);
   useEffect(() => startClock(), []);
