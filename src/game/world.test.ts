@@ -33,6 +33,30 @@ describe('street depth and deterministic decoration placement', () => {
   });
 });
 
+it('normalizes non-default external texture dimensions for doors, corners and sidewalk waypoints', () => {
+  for (const id of ['river_grill', 'market_gelato']) {
+    const plot = plots.find(p => p.id === id)!;
+    const ground = iso(plot.x, plot.y);
+    const defaults = entrance(id);
+    const art = { anchorX: 0.3, anchorY: 0.8, scale: 0.6, width: 400, height: 345 };
+    const actual = entrance(id, art);
+    const transform = (point: { x: number; y: number }) => ({
+      x: ground.x + ((point.x - ground.x) / 200 + 0.5 - art.anchorX) * art.width * art.scale,
+      y: ground.y + ((point.y - ground.y) / 230 + 1 - art.anchorY) * art.height * art.scale,
+    });
+    expect(actual.door.x).toBeCloseTo(transform(defaults.door).x);
+    expect(actual.door.y).toBeCloseTo(transform(defaults.door).y);
+    expect(actual.corner.x).toBeCloseTo(transform(defaults.corner).x);
+    expect(actual.corner.y).toBeCloseTo(transform(defaults.corner).y);
+    const dx = actual.door.x - defaults.door.x;
+    const dy = actual.door.y - defaults.door.y;
+    const shift = dx / 128 + dy / 64;
+    expect(actual.waypoint.x).toBeCloseTo(defaults.waypoint.x + shift * 64);
+    expect(actual.waypoint.y).toBeCloseTo(defaults.waypoint.y + shift * 32);
+    expect(depthAt(actual.door.y)).toBeGreaterThan(buildingDepth(ground.y, actual.door.y));
+  }
+});
+
 it('transforms doorway routing with external building anchors and scale on both streets', () => {
   for (const id of ['noodle_nook', 'sushi_station', 'river_grill', 'market_gelato']) {
     const plot = plots.find(p => p.id === id)!;

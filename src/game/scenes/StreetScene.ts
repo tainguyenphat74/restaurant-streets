@@ -45,6 +45,8 @@ export class StreetScene extends Phaser.Scene {
     await loadAssets(this);
     if (this.disposed || !this.sys?.isActive()) return;
     placeholders(this);
+    // Keep the existing opaque backdrop while the pooled display context retains alpha.
+    this.cameras.main.setBackgroundColor('#cee5b7');
     this.cameras.main.setBounds(-1100, -350, 2200, 1650);
     this.recenter();
     for (let x = 0; x < 16; x++)

@@ -118,6 +118,13 @@ try {
       ].map((neighborhood) => ({ ...migrated, neighborhood })),
       { ...migrated, pendingOffline: null },
       {
+        ...migrated,
+        restaurants: {
+          ...migrated.restaurants,
+          river_grill: { owned: true, level: 1, hasManager: false, register: 0 },
+        },
+      },
+      {
         ...v1,
         restaurants: {
           ...v1.restaurants,
@@ -184,7 +191,9 @@ try {
     await restore(expanded);
     await back();
     await page.goto(base + '/favicon.ico'); // checkpoint before advancing absence
-    await page.clock.setFixedTime(now + 11000);
+    // Move the paused wall clock for absence without pinning Date.now forever:
+    // subsequent fastForward calls must advance autosave checkpoint timestamps.
+    await page.clock.setSystemTime(now + 11000);
     await page.goto(base + '/?qa=1');
     await expect(
       page.getByRole('button', { name: 'Collect earnings' }),
