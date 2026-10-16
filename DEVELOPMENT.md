@@ -21,8 +21,8 @@ Scope: this repository and its existing Vercel project only. Preserve player sav
 | Item | Status | Acceptance boundary |
 | --- | --- | --- |
 | Bulk upgrades and clear milestone progress | **Live** | Buy 1 / Buy 10 / Next milestone / Buy max; partial affordable quantities quoted honestly; exact sequential costs/gems; cap enforced; unchanged old saves; mobile controls. |
-| Riverside Market — safe data/save foundation | **Implemented locally; not live** | Separate neighborhood definitions and versioned migration preserving existing coins, gems, restaurant levels/managers/registers, boosts and pending offline rewards; strict invalid-save handling. Incomplete features stay inactive. |
-| Riverside Market — playable expansion | Queued | Earned unlock goal, distinct second street/restaurants, switch streets without losing Maple Street, both neighborhoods earn correctly; purchases/managers/offline income/depth/touch work. Document simulation-tested pacing. |
+| Riverside Market — safe data/save foundation | **Live** | Separate neighborhood definitions and versioned migration preserving existing coins, gems, restaurant levels/managers/registers, boosts and pending offline rewards; strict invalid-save handling. Incomplete features stay inactive. |
+| Riverside Market — playable expansion | **Next** | Earned unlock goal, distinct second street/restaurants, switch streets without losing Maple Street, both neighborhoods earn correctly; purchases/managers/offline income/depth/touch work. Document simulation-tested pacing. |
 | Late-game milestones and balance | Queued | Simulate fresh/mid/late progression; add achievable goals beyond current rewards without nerfing earned progress or merely raising caps. |
 | Restaurant mastery | Queued | Short permanent achievement tracks, idempotent rewards, visible cosmetic/perk unlocks; valid old saves survive; no forced reset or daily-streak penalty. |
 | Expansion and mastery polish | Queued | Discoverable goals, completion state, accessibility, mobile usability, performance and regression coverage. |
@@ -31,7 +31,7 @@ Split large items into smaller tested releases. A data foundation is not a playa
 
 ## Current activity and automation
 
-- Riverside Market's data/save foundation has passed independent local release gates; publication/live verification is in progress. This is not a playable second neighborhood. Playable expansion is next.
+- Riverside Market's data/save foundation is published and live-verified. This is not a playable second neighborhood. Next run: smallest coherent playable-expansion slice, with explicit next-version migration before changing the pinned catalog/state schema; preserve both neighborhood saves and keep unfinished behavior inactive.
 - Autonomous continuation is configured every two hours with local delivery; progress belongs here rather than frequent chat messages.
 - The first two scheduled runs were blocked before execution by provider quota (429); they made no game changes. Codex CLI separately hit its usage limit during the performance correction, which was completed directly. A configured schedule does not prove a run succeeded. Resume from this file on the next healthy run.
 
@@ -56,7 +56,7 @@ Split large items into smaller tested releases. A data foundation is not a playa
 - Doorway draw-order fix: `4a70aac`.
 - Original verification: 53 unit tests, production build and desktop/mobile live gameplay/customer cycles, with zero page errors.
 
-### Riverside Market safe data/save foundation — verified locally, publication pending
+### Riverside Market safe data/save foundation — live
 
 - Implementation: `e35ee88`. Unchanged six-restaurant Maple catalog extracted into `src/data/maple.ts`; existing catalog API retained. Neighborhood definitions mark Maple active and Riverside inactive/empty: no new street, unlock, purchase or earnings yet.
 - Explicit validated v1 → v2 migration, with historical restaurant/upgrade IDs independent of the live catalog. V2 retains the flat state layout. Coins, gems, levels, managers, registers, boosts, global upgrades, pending rewards and timestamps survive exactly; only omitted v1 pending defaults to zero. Migration adds no income; normal import/export/reset/offline semantics remain.
@@ -66,4 +66,9 @@ Split large items into smaller tested releases. A data foundation is not a playa
 - Stable production preview `http://127.0.0.1:4186`: **all five suites passed**: `qa.mjs` (default WebGL desktop/mobile actual earning/collection/upgrade/purchase/managers/gestures/reload/offline claim), `qa-lifecycle.mjs`, `qa-customers.mjs`, `qa-bulk.mjs`, and new `qa-save.mjs`. Zero page errors. Desktop/mobile fresh screenshots inspected: scene/controls render with no obvious overlap/overflow.
 - Save coverage uses supported import/export/reset UI: exact v1 migration, v2 roundtrip, atomic invalid rejection, pending claim/reload idempotency; malformed/unsupported raw localStorage byte-preservation through boot/autosave/reload, invalid import/refused export and explicit recovery. Save/bulk fixture stress uses Canvas; save comparisons use frozen clock/deadline advancement, not natural-progress screenshot evidence. Standard gameplay remains WebGL.
 - Earlier agent WebGL run timed out on mobile; final parent stable-preview rerun passed completely. Lifecycle initially failed its obsolete storage-warning text assertion; updated it to verify paused saving plus unavailable-storage explanation in Settings, then reran successfully. No failed gate is hidden.
-- Runtime publication and exact deployment/live results will be recorded after verification. Next slice: playable Riverside with versioned migration before catalog/state expansion.
+- Published source: `5cf09fcce8a4eb43a51a55c7320e8d668054ec08` on main (implementation `e35ee88`, lifecycle QA/release gates `5cf09fc`). Normal fast-forward push; no force push or resets. Independent review found no blockers.
+- Git-triggered preview `dpl_EhfPdVBpyGZPny2Z1HXpoLCzZg68` was promoted once; resulting production rebuild `dpl_F7iEJ5ApVD27mKmHk7aeWXMt46rH`, https://restaurant-streets-dc8418l0y-nguyentai2760gmailcoms-projects.vercel.app, is **Ready / production**, metadata SHA exactly `5cf09fcce8a4eb43a51a55c7320e8d668054ec08`. No duplicate `vercel --prod` build.
+- Custom-domain alias verified by deployment inspection; HTTPS **200** at https://restaurant-streets.tainguyenphat.com/. Deployed asset `index-BwXCyIPC.js` contains the new save-protection warnings; live Settings export reports v2. Hosted asset hashes differ from the local build, so verification used source metadata plus real behavior/feature markers, not a false hash-equality claim.
+- **All five suites passed on the custom domain:** `qa-save.mjs`, `qa.mjs`, `qa-lifecycle.mjs`, `qa-customers.mjs`, `qa-bulk.mjs`, desktop/mobile with zero page errors. Verified actual earning/upgrades, v1 migration/export, v2 reload, pending claim idempotency, raw invalid-save protection and explicit recovery. Canvas fixture/default-WebGL distinction above remains applicable.
+- Verification caveat: authenticated `vercel curl` automatically generated a project deployment-protection bypass token; no token was printed or committed and protection was not disabled. Public-domain gameplay verification used ordinary unauthenticated browser contexts. No further credential changes were made.
+- Next slice: playable Riverside with versioned migration before catalog/state expansion. This release does not add playable Riverside content. Final evidence is a docs-only push, requiring no additional promotion.
