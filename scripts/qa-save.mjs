@@ -65,6 +65,7 @@ try {
       upgrades: ['ingredients', 'service'],
       pendingOffline: 432.125,
     };
+    delete v1.neighborhood; // Historical saves must not inherit v3 fields.
     Object.values(v1.restaurants).forEach((r, i) =>
       Object.assign(r, {
         owned: true,
@@ -75,13 +76,41 @@ try {
     );
     await restore(v1);
     const migrated = await exported();
-    expect(migrated).toEqual({ ...v1, version: 2, savedAt: now + 1000 });
+    expect(migrated).toEqual({
+      ...v1,
+      version: 3,
+      neighborhood: {
+        currentStreet: 'maple_street',
+        unlockedStreets: ['maple_street'],
+      },
+      savedAt: now + 1000,
+    });
+    await restore({ ...v1, version: 2 });
+    expect(await exported()).toEqual(migrated);
     await restore(migrated);
     expect(await exported()).toEqual(migrated);
     for (const bad of [
       { ...v1, version: 99 },
       { ...v1, version: '1' },
       { ...v1, coins: -1 },
+      { ...v1, neighborhood: migrated.neighborhood },
+      { ...v1, version: 2, neighborhood: migrated.neighborhood },
+      ...[
+        undefined,
+        null,
+        {},
+        { ...migrated.neighborhood, currentStreet: 'riverside_market' },
+        { ...migrated.neighborhood, currentStreet: 'unknown' },
+        { ...migrated.neighborhood, unlockedStreets: [] },
+        {
+          ...migrated.neighborhood,
+          unlockedStreets: ['maple_street', 'riverside_market'],
+        },
+        {
+          ...migrated.neighborhood,
+          unlockedStreets: ['maple_street', 'maple_street'],
+        },
+      ].map((neighborhood) => ({ ...migrated, neighborhood })),
       { ...migrated, pendingOffline: null },
       {
         ...v1,
@@ -91,7 +120,15 @@ try {
         },
       },
     ]) {
+      const rawBefore = await page.evaluate(() =>
+        localStorage.getItem('restaurant-streets-save'),
+      );
       await restore(bad, false);
+      expect(
+        await page.evaluate(() =>
+          localStorage.getItem('restaurant-streets-save'),
+        ),
+      ).toBe(rawBefore);
       expect(await exported()).toEqual(migrated);
     }
     await back();
@@ -130,6 +167,20 @@ try {
     // Seed actual browser storage, then boot through the normal load path.
     for (const [raw, recovery] of [
       ['{ broken raw save  ', 'reset'],
+      [
+        JSON.stringify(
+          {
+            ...initial,
+            neighborhood: {
+              currentStreet: 'riverside_market',
+              unlockedStreets: ['maple_street', 'riverside_market'],
+            },
+          },
+          null,
+          2,
+        ),
+        'import',
+      ],
       [JSON.stringify({ ...initial, version: 99 }, null, 2), 'import'],
     ]) {
       // Leave the app before seeding so the previous pagehide cannot overwrite it.
@@ -184,7 +235,7 @@ try {
     }
     expect(errors).toEqual([]);
     console.log(
-      `PASS ${mobile ? 'mobile' : 'desktop'}: v1 migration/export/reload, v2 roundtrip, atomic invalid rejection, single pending claim/reload, reset; corrupt/unsupported boot/autosave/reload/invalid import protection and explicit recovery; zero pageerrors`,
+      `PASS ${mobile ? 'mobile' : 'desktop'}: v1/v2 → v3 migration, v3 roundtrip/reload, atomic invalid rejection, single pending claim/reload, reset; corrupt/unsupported boot/autosave/reload/invalid import protection and explicit recovery; zero pageerrors`,
     );
     await context.close();
   }

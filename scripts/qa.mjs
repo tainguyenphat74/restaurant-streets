@@ -66,6 +66,7 @@ expect((await snap(page)).data.restaurants.noodle_nook.level).toBe(2);
 console.log('Desktop gestures, tabs and reload passed');
 // Advanced state is explicitly imported through the supported UI; never used for screenshots.
 const fixture = (await snap(page)).data;
+delete fixture.neighborhood; // Historical v1/v2 schema excludes v3 fields.
 fixture.coins = 2000;
 fixture.gems = 10;
 await page.getByRole('button', { name: 'Settings', exact: true }).click();

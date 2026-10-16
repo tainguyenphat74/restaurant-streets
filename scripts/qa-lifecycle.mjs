@@ -58,6 +58,7 @@ try {
   await page.keyboard.press('Escape');
   await expect(page.getByRole('dialog')).toHaveCount(0);
   const fixture = await page.evaluate(() => window.restaurantQA().data);
+  delete fixture.neighborhood; // Historical v1/v2 schema excludes v3 fields.
   await page.getByRole('button', { name: 'Settings', exact: true }).click();
   await page.getByLabel('Import a saved street').fill(
     JSON.stringify({

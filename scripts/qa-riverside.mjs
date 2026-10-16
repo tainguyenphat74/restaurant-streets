@@ -91,6 +91,7 @@ try {
     await expect(row('Noodle Nook')).toContainText('Level 2 / 25');
     async function fixture(levels) {
       const state = structuredClone(template);
+      delete state.neighborhood; // Historical v1/v2 schema excludes v3 fields.
       Object.values(state.restaurants).forEach((r, i) =>
         Object.assign(r, {
           owned: levels[i] > 0,

@@ -76,6 +76,7 @@ try {
         await page.getByRole('button', { name: 'Close restaurant' }).click();
       }
       const state = structuredClone(template);
+      delete state.neighborhood; // Historical v1/v2 schema excludes v3 fields.
       Object.assign(state.restaurants.noodle_nook, {
         level,
         register: 0,
