@@ -1,3 +1,4 @@
+import { restaurantAvailable } from './riverside';
 import { config, restaurants } from '../data/restaurants';
 import { upgrades } from '../data/upgrades';
 import { competitors } from '../data/competitors';
@@ -8,7 +9,7 @@ export type RestaurantState = {
   register: number;
 };
 // Only playable street IDs belong here; expand with a versioned save migration.
-export type StreetId = 'maple_street';
+export type StreetId = 'maple_street' | 'riverside_market';
 export type NeighborhoodState = {
   currentStreet: StreetId;
   unlockedStreets: StreetId[];
@@ -149,6 +150,7 @@ export function collect(g: GameData, id: string): GameData {
   };
 }
 export function levelUp(g: GameData, id: string): GameData {
+  if (!restaurantAvailable(g, id)) return g;
   const r = g.restaurants[id],
     cost = r.owned ? upgradeCost(id, r.level) : config(id).baseCost;
   if (g.coins < cost || r.level >= 1000) return g;

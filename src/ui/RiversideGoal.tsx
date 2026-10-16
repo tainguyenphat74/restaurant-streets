@@ -10,6 +10,10 @@ import { Card } from './components/Card';
 import { Button } from './components/Button';
 
 export function RiversideGoal() {
+  const unlocked = useGame((s) =>
+    s.data.neighborhood.unlockedStreets.includes('riverside_market'),
+  );
+  const unlock = useGame((s) => s.unlockRiverside);
   const completed = useGame((s) => riversideCompleted(s.data));
   return (
     <Card aria-labelledby="riverside-title" className="riverside-goal">
@@ -33,9 +37,23 @@ export function RiversideGoal() {
         max={riversideGoalIds.length}
       />
       <p>
-        Unavailable · Coming in a future update. This goal does not unlock
-        Riverside, spend coins or grant rewards.
+        Unlock a new street with two restaurants. Both streets keep earning;
+        upgrades and boosts are shared.
       </p>
+      <Button disabled={unlocked || completed !== 6} onClick={unlock}>
+        {unlocked ? '✓ Riverside unlocked' : 'Unlock Riverside Market'}
+      </Button>
+      {unlocked && (
+        <Button
+          className="secondary"
+          onClick={() => {
+            useGame.getState().switchStreet('riverside_market');
+            useGame.getState().setTab('Street');
+          }}
+        >
+          Visit Riverside Market ↗
+        </Button>
+      )}
       <ul className="riverside-list">
         {riversideGoalIds.map((id) => (
           <GoalRow key={id} id={id} />

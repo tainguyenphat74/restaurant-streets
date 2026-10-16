@@ -88,6 +88,7 @@ import { upgrades } from '../data/upgrades';
 it('prices every plot, upgrade, and manager precisely', () => {
   for (const c of restaurants) {
     let g = fresh();
+    g.neighborhood.unlockedStreets.push('riverside_market');
     g.coins = c.baseCost;
     const bought = levelUp(g, c.id);
     expect(bought.restaurants[c.id].owned).toBe(true);

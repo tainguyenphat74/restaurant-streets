@@ -21,3 +21,39 @@ export function riversideCompleted(data: GameData): number {
     (id) => riversideLevel(data, id) >= riversideTarget,
   ).length;
 }
+
+export function restaurantAvailable(data: GameData, id: string): boolean {
+  return (
+    riversideGoalIds.some((known) => known === id) ||
+    (['river_grill', 'market_gelato'].includes(id) &&
+      data.neighborhood.unlockedStreets.includes('riverside_market'))
+  );
+}
+export function unlockRiverside(data: GameData): GameData {
+  if (
+    data.neighborhood.unlockedStreets.includes('riverside_market') ||
+    riversideCompleted(data) !== 6
+  )
+    return data;
+  return {
+    ...data,
+    neighborhood: {
+      ...data.neighborhood,
+      unlockedStreets: ['maple_street', 'riverside_market'],
+    },
+  };
+}
+export function switchStreet(
+  data: GameData,
+  street: import('./economy').StreetId,
+): GameData {
+  if (
+    !data.neighborhood.unlockedStreets.includes(street) ||
+    data.neighborhood.currentStreet === street
+  )
+    return data;
+  return {
+    ...data,
+    neighborhood: { ...data.neighborhood, currentStreet: street },
+  };
+}

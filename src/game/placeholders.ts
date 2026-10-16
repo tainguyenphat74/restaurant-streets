@@ -37,7 +37,7 @@ export function placeholders(scene: Phaser.Scene) {
         true,
       );
     });
-  const colors = [0xe87350, 0x65a8aa, 0xeebc55, 0x76ac72, 0xd66b74, 0x8f87bd];
+  const colors = [0xe87350, 0x65a8aa, 0xeebc55, 0x76ac72, 0xd66b74, 0x8f87bd, 0x479c99, 0xd88cae];
   [
     'noodle_nook',
     'coffee_corner',
@@ -45,6 +45,8 @@ export function placeholders(scene: Phaser.Scene) {
     'taco_tuesday',
     'tomato_basil',
     'sushi_station',
+    'river_grill',
+    'market_gelato',
   ].forEach((id, i) =>
     make('building_' + id, 200, 230, () => {
       const cream = 0xffefd0,
@@ -80,8 +82,8 @@ export function placeholders(scene: Phaser.Scene) {
         g.lineBetween(x - 2, y - 3, x, y);
       }
       // Upper row front door; lower row side porch opens at the left corner.
-      const dx = i < 3 ? 78 : 16,
-        dy = i < 3 ? 211 : 180;
+      const dx = (i < 3 || i === 6) ? 78 : 16,
+        dy = (i < 3 || i === 6) ? 211 : 180;
       poly(
         [dx - 8, dy - 43, dx + 8, dy - 35, dx + 8, dy + 4, dx - 8, dy - 4],
         wood,
@@ -149,6 +151,13 @@ export function placeholders(scene: Phaser.Scene) {
         g.fillStyle(0xd75f4b);
         g.fillCircle(cx, cy + 2, 11);
         poly([45, 124, 35, 118, 44, 120, 49, 115, 49, 122, 56, 124], 0x64915a);
+      } else if (i === 6) {
+        g.fillEllipse(cx, cy, 23, 13);
+        poly([54, 130, 61, 122, 61, 138], colors[i]);
+        g.fillStyle(wood); g.fillCircle(38, 128, 2);
+      } else if (i === 7) {
+        poly([34, 132, 56, 132, 45, 145], 0xd99947);
+        g.fillCircle(39, 126, 7); g.fillCircle(51, 126, 7);
       } else {
         g.fillStyle(0x456e63);
         g.fillRoundedRect(33, 123, 25, 16, 5);

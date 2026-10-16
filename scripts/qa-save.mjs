@@ -66,6 +66,8 @@ try {
       pendingOffline: 432.125,
     };
     delete v1.neighborhood; // Historical saves must not inherit v3 fields.
+    delete v1.restaurants.river_grill;
+    delete v1.restaurants.market_gelato;
     Object.values(v1.restaurants).forEach((r, i) =>
       Object.assign(r, {
         owned: true,
@@ -78,7 +80,8 @@ try {
     const migrated = await exported();
     expect(migrated).toEqual({
       ...v1,
-      version: 3,
+      version: 4,
+      restaurants: { ...initial.restaurants, ...v1.restaurants },
       neighborhood: {
         currentStreet: 'maple_street',
         unlockedStreets: ['maple_street'],
@@ -86,6 +89,8 @@ try {
       savedAt: now + 1000,
     });
     await restore({ ...v1, version: 2 });
+    expect(await exported()).toEqual(migrated);
+    await restore({ ...v1, version: 3, neighborhood: migrated.neighborhood });
     expect(await exported()).toEqual(migrated);
     await restore(migrated);
     expect(await exported()).toEqual(migrated);
@@ -158,11 +163,59 @@ try {
     ).toHaveCount(0);
     await settings();
     expect(await exported()).toEqual(claimed);
+    // V4 both-street offline integration, including a partially expired shared
+    // boost, uses the supported import UI and frozen clock (no gameplay images).
+    const expanded = structuredClone(initial);
+    expanded.neighborhood = {
+      currentStreet: 'riverside_market',
+      unlockedStreets: ['maple_street', 'riverside_market'],
+    };
+    for (const r of Object.values(expanded.restaurants))
+      Object.assign(r, {
+        owned: true,
+        level: 25,
+        hasManager: true,
+        register: 0,
+      });
+    expanded.upgrades = ['ingredients', 'service'];
+    expanded.coins = 100;
+    expanded.boostUntil = now + 6000;
+    expanded.pendingOffline = 17;
+    await restore(expanded);
+    await back();
+    await page.goto(base + '/favicon.ico'); // checkpoint before advancing absence
+    await page.clock.setFixedTime(now + 11000);
+    await page.goto(base + '/?qa=1');
+    await expect(
+      page.getByRole('button', { name: 'Collect earnings' }),
+    ).toBeVisible();
+    const offline = await page.evaluate(() =>
+      JSON.parse(localStorage.getItem('restaurant-streets-save')),
+    );
+    const baseRate =
+      (1 + 5 + 40 + 300 + 2500 + 25000 + 90000 + 400000) *
+      25 *
+      4 *
+      (4.75 / 4) *
+      3;
+    expect(offline.pendingOffline).toBe(17 + baseRate * (10 + 5) * 0.5);
+    await page.getByRole('button', { name: 'Collect earnings' }).click();
+    await settings();
+    const settled = await exported();
+    expect(settled.coins).toBe(100 + offline.pendingOffline);
+    expect(settled.pendingOffline).toBe(0);
+    await page.reload();
+    await expect(
+      page.getByRole('button', { name: 'Collect earnings' }),
+    ).toHaveCount(0);
+    await settings();
+    expect(await exported()).toEqual(settled);
     await page.getByRole('button', { name: 'Reset my street' }).click();
     await page.getByRole('button', { name: 'Yes, start fresh' }).click();
     await settings();
     const resetExpected = structuredClone(initial);
     resetExpected.restaurants.noodle_nook.register = 0;
+    resetExpected.savedAt = now + 11000;
     expect(await exported()).toEqual(resetExpected);
     // Seed actual browser storage, then boot through the normal load path.
     for (const [raw, recovery] of [
@@ -235,7 +288,7 @@ try {
     }
     expect(errors).toEqual([]);
     console.log(
-      `PASS ${mobile ? 'mobile' : 'desktop'}: v1/v2 → v3 migration, v3 roundtrip/reload, atomic invalid rejection, single pending claim/reload, reset; corrupt/unsupported boot/autosave/reload/invalid import protection and explicit recovery; zero pageerrors`,
+      `PASS ${mobile ? 'mobile' : 'desktop'}: v1/v2/v3 → v4 migration, v4 roundtrip/reload, atomic invalid rejection, single pending claim/reload, reset; corrupt/unsupported boot/autosave/reload/invalid import protection and explicit recovery; zero pageerrors`,
     );
     await context.close();
   }

@@ -32,3 +32,16 @@ describe('street depth and deterministic decoration placement', () => {
     }
   });
 });
+
+it('transforms doorway routing with external building anchors and scale on both streets', () => {
+  for (const id of ['noodle_nook', 'sushi_station', 'river_grill', 'market_gelato']) {
+    const plot = plots.find(p => p.id === id)!;
+    const ground = iso(plot.x, plot.y);
+    const defaults = entrance(id);
+    const art = { anchorX: 0.25, anchorY: 0.75, scale: 0.8, width: 200, height: 230 };
+    const transformed = entrance(id, art);
+    expect(transformed.door.x).toBeCloseTo(ground.x + (defaults.door.x - ground.x + 50) * 0.8);
+    expect(transformed.door.y).toBeCloseTo(ground.y + (defaults.door.y - ground.y + 57.5) * 0.8);
+    expect(depthAt(transformed.door.y)).toBeGreaterThan(buildingDepth(ground.y, transformed.door.y));
+  }
+});

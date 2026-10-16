@@ -3,7 +3,26 @@ import { fresh, accrue, offlineIncome, totalIncome } from './economy';
 import { migrateSave, parseSave, serialize, load } from './save';
 
 function legacy() {
-  const { neighborhood: _, ...data } = fresh();
+  // Literal six-ID historical wire state, independent of the live catalog.
+  const data = {
+    coins: 0,
+    gems: 0,
+    boostUntil: 0,
+    upgrades: [] as string[],
+    restaurants: Object.fromEntries(
+      [
+        'noodle_nook',
+        'coffee_corner',
+        'sunny_bakery',
+        'taco_tuesday',
+        'tomato_basil',
+        'sushi_station',
+      ].map((id) => [
+        id,
+        { owned: false, level: 0, hasManager: false, register: 0 },
+      ]),
+    ),
+  };
   data.coins = 123456.789;
   data.gems = 87;
   data.boostUntil = 601000;
@@ -23,7 +42,8 @@ it('explicitly migrates every v1 field without resetting progress or timestamps'
   const migrated = migrateSave(JSON.stringify(v1));
   expect(migrated).toEqual({
     ...v1,
-    version: 3,
+    restaurants: { ...fresh().restaurants, ...v1.restaurants },
+    version: 4,
     neighborhood: fresh().neighborhood,
   });
   expect(parseSave(JSON.stringify(migrated))).toEqual(migrated);
@@ -31,7 +51,11 @@ it('explicitly migrates every v1 field without resetting progress or timestamps'
   expect(
     JSON.parse(
       serialize(
-        { ...data, neighborhood: fresh().neighborhood },
+        {
+          ...data,
+          restaurants: { ...fresh().restaurants, ...data.restaurants },
+          neighborhood: fresh().neighborhood,
+        },
         savedAt,
         pendingOffline,
       ),
@@ -42,11 +66,19 @@ it('explicitly migrates every v1 field without resetting progress or timestamps'
     setItem() {},
     removeItem() {},
   });
-  expect(loaded.data).toEqual({ ...data, neighborhood: fresh().neighborhood });
+  expect(loaded.data).toEqual({
+    ...data,
+    restaurants: { ...fresh().restaurants, ...data.restaurants },
+    neighborhood: fresh().neighborhood,
+  });
   expect(loaded.pending).toBe(
     pendingOffline +
       offlineIncome(
-        { ...data, neighborhood: fresh().neighborhood },
+        {
+          ...data,
+          restaurants: { ...fresh().restaurants, ...data.restaurants },
+          neighborhood: fresh().neighborhood,
+        },
         savedAt,
         2000,
       ),
@@ -61,7 +93,8 @@ it('accepts legacy omitted pending only and rejects malformed schemas without fa
   const { pendingOffline, ...old } = v1;
   expect(migrateSave(JSON.stringify(old))).toEqual({
     ...old,
-    version: 3,
+    restaurants: { ...fresh().restaurants, ...old.restaurants },
+    version: 4,
     neighborhood: fresh().neighborhood,
     pendingOffline: 0,
   });

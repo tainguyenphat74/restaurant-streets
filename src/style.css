@@ -908,3 +908,8 @@ nav button.active {
   padding: 12px 0;
   border-top: 1px solid #f0e9df;
 }
+
+.street-switch { position: static; display: flex; flex-wrap: wrap; justify-content: flex-start; gap: 8px; pointer-events: auto; }
+.street-switch button { min-height: 44px; padding: 8px 12px; border-radius: 16px; background: white; font-weight: 700; }
+.street-switch button[aria-pressed="true"] { background: #E8553A; color: white; }
+.street-switch button:disabled { opacity: .6; }

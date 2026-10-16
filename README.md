@@ -23,6 +23,8 @@ For browser QA, keep the dev server running, install Chromium with `npx playwrig
 
 Collect the gold bubble above Noodle Nook, then select the restaurant to upgrade. Buy the vacant For Sale plots as your street grows. Kitchen lets you hire managers for automatic collection and half-rate offline earnings (up to eight hours). Upgrades offers permanent street multipliers and a ten-minute gem boost. Rankings compares your net worth with nine fictional, deterministic competitors.
 
+Bring all six Maple restaurants to level 25, then explicitly unlock Riverside Market in Kitchen. Use the street buttons on the map to switch between Maple and Riverside. River Grill and Market Gelato have their own plots; both streets earn while you visit either one, and global upgrades and boosts apply to both. Unlocking is free and does not buy either restaurant.
+
 Drag the map to pan; use the wheel, two-finger pinch, or +/− buttons to zoom. The target button recenters. Tap a building or its React label to open its panel; close it with × or Escape. On phones the panel becomes a scrolling bottom sheet below navigation. Settings supports validated import, export with download fallback, and confirmed reset. Back up your save before clearing browser data. If browser storage is blocked, a banner appears; use export to preserve progress.
 
 The game honors reduced motion, supports keyboard buttons and focus-trapped dialogs, and pauses active earnings while hidden. Only managed restaurants earn offline rewards. Registers hold sixty seconds of current income. Offline claims are checkpointed in the save to avoid duplicate rewards on refresh; blocked storage cannot guarantee persistence across reloads.
@@ -64,6 +66,10 @@ Keep the ground footprint in 2:1 isometric projection (tiles are 128×64; a tall
 }
 ```
 
-Supported keys are `building_noodle_nook`, `building_coffee_corner`, `building_sunny_bakery`, `building_taco_tuesday`, `building_tomato_basil`, `building_sushi_station`, `grass`, `road`, `sidewalk`, `water`, `tree`, `lamp`, `bench`, `walker`, and `coin`. File paths are relative to `public/assets/`. Anchors are normalized image coordinates; `scale` must be positive. Buildings, props, walkers and coins apply the manifest anchor and scale; terrain tiles use centered origins and native size, so supply 128×64 terrain PNGs.
+Supported keys are `building_noodle_nook`, `building_coffee_corner`, `building_sunny_bakery`, `building_taco_tuesday`, `building_tomato_basil`, `building_sushi_station`, `building_river_grill`, `building_market_gelato`, `grass`, `road`, `sidewalk`, `water`, `tree`, `lamp`, `bench`, `walker`, and `coin`. File paths are relative to `public/assets/`. Anchors are normalized image coordinates; `scale` must be positive. Buildings, props, walkers and coins apply the manifest anchor and scale; terrain tiles use centered origins and native size, so supply 128×64 terrain PNGs.
 
 Omitted, invalid or failed keys fall back to procedural textures. Non-terrain fallback anchors are `(0.5, 1)` with scale `1`; terrain defaults are centered. A new empty manifest clears prior presentation metadata. Restaurant panel previews use the loaded texture and the same scale and anchor as the scene (as CSS transform origin). Reload, open the restaurant panel, and check the ground contact, preview and camera zoom at desktop and mobile sizes. `node scripts/qa-assets.mjs` tests an intercepted temporary PNG, custom preview metadata, missing-image fallback and returning to an empty manifest without adding fixture artwork to production.
+
+Save format v4 validates v1/v2/v3 against their frozen six-restaurant schemas before migration, preserving all progress and adding two empty Riverside records. V3 remains Maple-only. Invalid saves remain protected until valid import or explicit reset.
+
+Building door routing uses the same anchor, scale and texture dimensions as the rendered sprite. Replacement art should place its door at the normalized procedural facade location: `(78/200, 211/230)` for the upper row (including River Grill), `(16/200, 180/230)` for the lower row (including Market Gelato). Queue depth remains in front of the doorway.

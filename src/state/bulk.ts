@@ -1,3 +1,4 @@
+import { restaurantAvailable } from './riverside';
 import { restaurants } from '../data/restaurants';
 import { milestones, upgradeCost, type GameData } from './economy';
 
@@ -15,6 +16,7 @@ function simulate(g: GameData, id: string, mode: BuyMode) {
   const config = restaurants.find((r) => r.id === id);
   const r = g.restaurants[id];
   if (
+    !restaurantAvailable(g, id) ||
     !config ||
     !r ||
     !Number.isFinite(coins) ||

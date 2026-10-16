@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { iso, plots } from '../iso';
+import { iso, plotsForStreet } from '../iso';
 import { buildingDepth, decorationLayout, depthAt } from '../world';
 import { loadAssets, metadata, previews } from '../assets';
 import { placeholders } from '../placeholders';
@@ -17,6 +17,7 @@ export type MapHooks = {
   project: (positions: Record<string, { x: number; y: number }>) => void;
 };
 export class StreetScene extends Phaser.Scene {
+  private plots = plotsForStreet(useGame.getState().data.neighborhood.currentStreet);
   buildings = new Map<string, Phaser.GameObjects.Image>();
   private lots = new Map<string, Phaser.GameObjects.Graphics>();
   private walkers: Phaser.GameObjects.Container[] = [];
@@ -78,7 +79,7 @@ export class StreetScene extends Phaser.Scene {
       this.decor(decoration.key, decoration.x, decoration.y, decoration.scale);
     }
     this.outline = this.add.graphics().setDepth(0);
-    for (const plot of plots) {
+    for (const plot of this.plots) {
       const p = iso(plot.x, plot.y),
         key = 'building_' + plot.id,
         m = metadata(key);
@@ -105,9 +106,9 @@ export class StreetScene extends Phaser.Scene {
       const b = this.add
         .image(p.x, p.y, key)
         .setOrigin(m.anchorX, m.anchorY)
-        .setScale(m.scale)
-        .setDepth(buildingDepth(p.y, entrance(plot.id).door.y));
+        .setScale(m.scale);
       this.buildings.set(plot.id, b);
+      b.setDepth(buildingDepth(p.y, this.entrance(plot.id).door.y));
       previews[plot.id] = this.textures.getBase64(key);
     }
     for (let i = 0; i < 12; i++)
@@ -121,7 +122,7 @@ export class StreetScene extends Phaser.Scene {
       );
     const unsubscribe = useGame.subscribe((state, previous) => {
       this.refresh();
-      for (const p of plots) {
+      for (const p of this.plots) {
         const a = state.data.restaurants[p.id],
           b = previous.data.restaurants[p.id];
         if (a.register < b.register && state.data.coins > previous.data.coins)
@@ -172,7 +173,7 @@ export class StreetScene extends Phaser.Scene {
     this.input.on('pointerup', (p: Phaser.Input.Pointer) => {
       if (!this.dragged && !this.pointers().length) {
         const w = this.cameras.main.getWorldPoint(p.x, p.y);
-        const hit = [...plots].reverse().find((plot) => {
+        const hit = [...this.plots].reverse().find((plot) => {
           const q = iso(plot.x, plot.y);
           return (
             Math.abs(w.x - q.x) < 95 &&
@@ -196,7 +197,7 @@ export class StreetScene extends Phaser.Scene {
     this.scale.on('resize', this.recenter, this);
     const motion = () => {
       this.tweens.killAll();
-      for (const p of plots) this.buildings.get(p.id)?.setY(iso(p.x, p.y).y);
+      for (const p of this.plots) this.buildings.get(p.id)?.setY(iso(p.x, p.y).y);
       for (const c of this.coins) c.setVisible(false);
       this.refresh();
     };
@@ -216,6 +217,10 @@ export class StreetScene extends Phaser.Scene {
     this.ready = true;
     this.refresh();
   }
+  private entrance = (id: string) => {
+    const building = this.buildings.get(id);
+    return entrance(id, { ...metadata('building_' + id), width: building?.width, height: building?.height });
+  };
   private pointers() {
     return this.input.manager.pointers.filter((p) => p.isDown);
   }
@@ -235,7 +240,7 @@ export class StreetScene extends Phaser.Scene {
     if (!this.ready) return;
     const state = useGame.getState();
     this.outline.clear();
-    for (const p of plots) {
+    for (const p of this.plots) {
       const r = state.data.restaurants[p.id];
       this.buildings.get(p.id)!.setVisible(r.owned);
       this.lots.get(p.id)!.setVisible(!r.owned);
@@ -310,7 +315,7 @@ export class StreetScene extends Phaser.Scene {
 
   private floatCoins(id: string) {
     if (this.reduced.matches) return;
-    const plot = plots.find((p) => p.id === id)!,
+    const plot = this.plots.find((p) => p.id === id)!,
       p = iso(plot.x, plot.y);
     for (let i = 0; i < 3; i++) {
       const c = this.coins.find((c) => !c.visible);
@@ -367,13 +372,13 @@ export class StreetScene extends Phaser.Scene {
   }
   update(time: number, delta: number) {
     if (!this.ready) return;
-    const owned = plots
+    const owned = this.plots
       .filter((p) => useGame.getState().data.restaurants[p.id].owned)
       .map((p) => p.id);
     this.walkers.forEach((walker, i) => {
       const customer = this.customers[i],
         oldX = customer.x;
-      if (!this.reduced.matches) advanceCustomer(customer, delta / 1000, owned);
+      if (!this.reduced.matches) advanceCustomer(customer, delta / 1000, owned, this.entrance);
       walker
         .setPosition(customer.x, customer.y)
         .setDepth(depthAt(customer.y))
@@ -389,7 +394,7 @@ export class StreetScene extends Phaser.Scene {
     if (key === this.projection) return;
     this.projection = key;
     const positions: Record<string, { x: number; y: number }> = {};
-    for (const p of plots) {
+    for (const p of this.plots) {
       const w = iso(p.x, p.y);
       positions[p.id] = {
         x: (w.x - c.scrollX - c.width / 2) * c.zoom + c.width / 2,

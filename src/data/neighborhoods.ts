@@ -1,6 +1,7 @@
 import { mapleRestaurants } from './maple';
+import { riversideRestaurants } from './riverside';
 
-// Definitions are metadata, not unlocks. Inactive neighborhoods have no economy.
+// Catalog availability is metadata; earned unlocks are stored separately.
 export const neighborhoods = [
   {
     id: 'maple_street',
@@ -11,7 +12,7 @@ export const neighborhoods = [
   {
     id: 'riverside_market',
     name: 'Riverside Market',
-    active: false,
-    restaurants: [],
+    active: true,
+    restaurants: riversideRestaurants,
   },
 ] as const;

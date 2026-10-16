@@ -10,6 +10,8 @@ afterEach(() => {
 it.each([
   '{ broken raw ',
   '{ "version": 99 }',
+  // A v3 label must never reinterpret a v4 restaurant catalog.
+  JSON.stringify({ ...JSON.parse(serialize(fresh(), 1000)), version: 3 }),
   JSON.stringify({
     ...JSON.parse(serialize(fresh(), 1000)),
     neighborhood: {

@@ -2,11 +2,22 @@ import { useShallow } from 'zustand/react/shallow';
 import { useEffect, useRef, useState } from 'react';
 import { createGame } from '../../game/PhaserGame';
 import { useGame } from '../../state/store';
+import { neighborhoods } from '../../data/neighborhoods';
 import { restaurants } from '../../data/restaurants';
 import { totalIncome } from '../../state/economy';
 import { format } from '../../utils/format';
 import type { StreetScene } from '../../game/scenes/StreetScene';
 export function StreetTab() {
+  const street = useGame((s) => s.data.neighborhood.currentStreet);
+  return <StreetView key={street} />;
+}
+function StreetView() {
+  const street = useGame((s) => s.data.neighborhood.currentStreet);
+  const unlocked = useGame((s) =>
+    s.data.neighborhood.unlockedStreets.includes('riverside_market'),
+  );
+  const switchStreet = useGame((s) => s.switchStreet);
+  const neighborhood = neighborhoods.find((n) => n.id === street)!;
   const host = useRef<HTMLDivElement>(null),
     scene = useRef<StreetScene>();
   const [positions, setPositions] = useState<
@@ -41,10 +52,27 @@ export function StreetTab() {
       <div className="street-heading">
         <span className="eyebrow">YOUR LITTLE FOOD NEIGHBORHOOD</span>
         <h1>Life tastes better here.</h1>
-        <p>Six little restaurants. One big dream.</p>
+        <p>
+          {street === 'maple_street'
+            ? 'Six little restaurants. One big dream.'
+            : 'Fresh grills and sweet scoops by the river.'}
+        </p>
+        <nav aria-label="Choose street" className="street-switch">
+          {neighborhoods.map((n) => (
+            <button
+              key={n.id}
+              aria-pressed={street === n.id}
+              disabled={n.id === 'riverside_market' && !unlocked}
+              onClick={() => switchStreet(n.id)}
+            >
+              {n.name}
+              {n.id === 'riverside_market' && !unlocked ? ' · Locked' : ''}
+            </button>
+          ))}
+        </nav>
       </div>
       <div className="map-overlays">
-        {restaurants.map(
+        {neighborhood.restaurants.map(
           (c) =>
             positions[c.id] && (
               <PlotLabel key={c.id} id={c.id} position={positions[c.id]} />
@@ -52,7 +80,7 @@ export function StreetTab() {
         )}
       </div>
       <div className="street-sign">
-        MAPLE STREET <span>✿</span>
+        {neighborhood.name.toUpperCase()} <span>✿</span>
       </div>
       <div className="map-controls">
         <button aria-label="Zoom in" onClick={() => scene.current?.zoom(1.15)}>

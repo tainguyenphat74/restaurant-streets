@@ -1,3 +1,5 @@
+import { unlockRiverside, switchStreet } from './riverside';
+import type { StreetId } from './economy';
 import { buyLevels, type BuyMode } from './bulk';
 import { create } from 'zustand';
 import {
@@ -20,6 +22,8 @@ type State = {
   storageError: boolean;
   saveProtected: boolean;
   now: number;
+  unlockRiverside: () => void;
+  switchStreet: (street: StreetId) => void;
   select: (id: string | null) => void;
   setTab: (tab: string) => void;
   act: (
@@ -42,6 +46,9 @@ export const useGame = create<State>((set, get) => ({
   storageError: false,
   saveProtected: false,
   now: Date.now(),
+  unlockRiverside: () => set((s) => ({ data: unlockRiverside(s.data) })),
+  switchStreet: (street) =>
+    set((s) => ({ data: switchStreet(s.data, street), selected: null })),
   select: (selected) => set({ selected }),
   setTab: (tab) => set({ tab, selected: null }),
   toast: (text) => {

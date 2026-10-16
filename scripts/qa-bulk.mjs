@@ -77,6 +77,8 @@ try {
       }
       const state = structuredClone(template);
       delete state.neighborhood; // Historical v1/v2 schema excludes v3 fields.
+      delete state.restaurants.river_grill;
+      delete state.restaurants.market_gelato;
       Object.assign(state.restaurants.noodle_nook, {
         level,
         register: 0,

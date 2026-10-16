@@ -95,6 +95,8 @@ try {
     // Explicit supported import UI fixture for purchase/second-side routing only.
     const fixture = await page.evaluate(() => window.restaurantQA().data);
     delete fixture.neighborhood; // Historical v1/v2 schema excludes v3 fields.
+    delete fixture.restaurants.river_grill;
+    delete fixture.restaurants.market_gelato;
     fixture.coins = 4000000;
     await page.getByRole('button', { name: 'Settings', exact: true }).click();
     await page

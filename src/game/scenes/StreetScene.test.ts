@@ -70,3 +70,26 @@ describe('customer presentation and read-only QA', () => {
     expect(scene.snapshot().customers![0].route[0].x).not.toBe(99999);
   });
 });
+
+it('projects only the two distinct Riverside plots and routes customers on that street', async () => {
+  const { useGame } = await import('../../state/store');
+  const { fresh } = await import('../../state/economy');
+  const g = fresh();
+  g.neighborhood = { currentStreet: 'riverside_market', unlockedStreets: ['maple_street', 'riverside_market'] };
+  for (const id of ['river_grill', 'market_gelato']) Object.assign(g.restaurants[id], { owned: true, level: 1 });
+  useGame.getState().restore(g);
+  const { scene, s } = setup(true);
+  const project = vi.fn(); s.hooks.project = project;
+  s.reduced.matches = true;
+  const frozen = scene.snapshot();
+  scene.update(100, 100);
+  expect(scene.snapshot()).toEqual(frozen);
+  s.reduced.matches = false;
+  scene.update(100, 100);
+  expect(Object.keys(project.mock.calls[0][0])).toEqual(['river_grill', 'market_gelato']);
+  for (let i = 0; i < 2000; i++) scene.update(i * 100, 100);
+  const customers = scene.snapshot().customers!;
+  expect(customers.some(c => c.visits > 0)).toBe(true);
+  expect(customers.every(c => !c.destination || ['river_grill', 'market_gelato'].includes(c.destination))).toBe(true);
+  useGame.getState().restore(fresh());
+});

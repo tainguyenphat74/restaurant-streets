@@ -9,10 +9,11 @@ const saveRestaurantIds = [
   'sushi_station',
 ] as const;
 const saveUpgradeIds = ['ingredients', 'service'] as const;
-export const SAVE_VERSION = 3;
+const v4RestaurantIds = [...saveRestaurantIds, 'river_grill', 'market_gelato'];
+export const SAVE_VERSION = 4;
 export const SAVE_KEY = 'restaurant-streets-save';
 export type Save = GameData & {
-  version: 3;
+  version: 4;
   savedAt: number;
   pendingOffline: number;
 };
@@ -41,10 +42,13 @@ export function migrateSave(json: string): Save | null {
             'restaurants',
             'upgrades',
             'pendingOffline',
-            ...(v.version === 3 ? ['neighborhood'] : []),
+            ...(v.version >= 3 ? ['neighborhood'] : []),
           ].includes(key),
       ) ||
-      (v.version !== 1 && v.version !== 2 && v.version !== SAVE_VERSION) ||
+      (v.version !== 1 &&
+        v.version !== 2 &&
+        v.version !== 3 &&
+        v.version !== SAVE_VERSION) ||
       !validTimestamp(v.savedAt) ||
       !validNumber(v.coins) ||
       !validNumber(v.gems) ||
@@ -55,7 +59,8 @@ export function migrateSave(json: string): Save | null {
       !v.restaurants ||
       typeof v.restaurants !== 'object' ||
       Array.isArray(v.restaurants) ||
-      Object.keys(v.restaurants).length !== saveRestaurantIds.length ||
+      Object.keys(v.restaurants).length !==
+        (v.version === 4 ? v4RestaurantIds : saveRestaurantIds).length ||
       !Array.isArray(v.upgrades) ||
       new Set(v.upgrades).size !== v.upgrades.length ||
       !v.upgrades.every((id: unknown) =>
@@ -81,7 +86,7 @@ export function migrateSave(json: string): Save | null {
       )
         return null;
     }
-    for (const id of saveRestaurantIds) {
+    for (const id of v.version === 4 ? v4RestaurantIds : saveRestaurantIds) {
       const r = v.restaurants[id];
       if (
         !r ||
@@ -102,9 +107,45 @@ export function migrateSave(json: string): Save | null {
         return null;
     }
     if (!v.restaurants.noodle_nook.owned) return null;
+    if (v.version === 4) {
+      const n = v.neighborhood;
+      if (
+        !n ||
+        typeof n !== 'object' ||
+        Array.isArray(n) ||
+        Object.keys(n).length !== 2 ||
+        !Array.isArray(n.unlockedStreets) ||
+        n.unlockedStreets[0] !== 'maple_street' ||
+        ![1, 2].includes(n.unlockedStreets.length) ||
+        (n.unlockedStreets.length === 2 &&
+          n.unlockedStreets[1] !== 'riverside_market') ||
+        !n.unlockedStreets.includes(n.currentStreet)
+      )
+        return null;
+      const unlocked = n.unlockedStreets.length === 2;
+      if (
+        unlocked &&
+        !saveRestaurantIds.every((id) => v.restaurants[id].level >= 25)
+      )
+        return null;
+      if (
+        !unlocked &&
+        ['river_grill', 'market_gelato'].some((id) => v.restaurants[id].owned)
+      )
+        return null;
+    }
+    // Append new empty records only after the complete historical schema passed.
+    if (v.version < 4)
+      for (const id of ['river_grill', 'market_gelato'])
+        v.restaurants[id] = {
+          owned: false,
+          level: 0,
+          hasManager: false,
+          register: 0,
+        };
     return {
       neighborhood:
-        v.version === 3
+        v.version >= 3
           ? {
               currentStreet: v.neighborhood.currentStreet,
               unlockedStreets: [...v.neighborhood.unlockedStreets],
@@ -120,7 +161,7 @@ export function migrateSave(json: string): Save | null {
       boostUntil: v.boostUntil,
       upgrades: [...v.upgrades],
       restaurants: Object.fromEntries(
-        saveRestaurantIds.map((id) => {
+        v4RestaurantIds.map((id) => {
           const r = v.restaurants[id];
           return [
             id,
@@ -139,7 +180,7 @@ export function migrateSave(json: string): Save | null {
     return null;
   }
 }
-// V1/V2 → V3 adds only historical Maple neighborhood defaults after validation.
+// V1/V2/V3 → V4 preserves historical progress and adds two empty restaurants.
 // Only V1 may omit pending rewards; migrations award and unlock nothing.
 // Both loading and import use this same validated migration boundary.
 export const parseSave = migrateSave;

@@ -41,7 +41,12 @@ it.each([1, 2])(
   'validates v%s before adding only historical Maple defaults',
   (version) => {
     const old = historical(version);
-    const expected = { ...old, version: 3, neighborhood };
+    const expected = {
+      ...old,
+      restaurants: { ...fresh().restaurants, ...old.restaurants },
+      version: 4,
+      neighborhood,
+    };
     expect(parseSave(JSON.stringify(old))).toEqual(expected);
     const storage = {
       getItem: () => JSON.stringify(old),
@@ -87,18 +92,22 @@ it('roundtrips v3 and preserves neighborhood through import, actions, load and r
   useGame.getState().act('collect', 'coffee_corner');
   const beforeClaim = useGame.getState().data.coins;
   claimOffline();
-  expect(useGame.getState().data.coins).toBe(beforeClaim + saved.pendingOffline);
+  expect(useGame.getState().data.coins).toBe(
+    beforeClaim + saved.pendingOffline,
+  );
   expect(useGame.getState().pending).toBe(0);
   expect(useGame.getState().data.neighborhood).toEqual(neighborhood);
   claimOffline();
-  expect(useGame.getState().data.coins).toBe(beforeClaim + saved.pendingOffline);
+  expect(useGame.getState().data.coins).toBe(
+    beforeClaim + saved.pendingOffline,
+  );
   expect(parseSave(exportGame()!)?.neighborhood).toEqual(neighborhood);
   expect(load(Date.now()).data.neighborhood).toEqual(neighborhood);
   resetGame();
   expect(useGame.getState().data).toEqual(fresh());
   expect(JSON.parse(storage.get(SAVE_KEY)!).neighborhood).toEqual(neighborhood);
   expect(JSON.parse(serialize(fresh(), 0))).toMatchObject({
-    version: 3,
+    version: 4,
     neighborhood,
   });
 });
