@@ -40,7 +40,7 @@ it('claims exactly once and imports atomically with saved pending rewards', () =
   useGame.getState().restore(fresh(), 900);
   const backup = exportGame();
   useGame.getState().restore(fresh());
-  expect(importGame(backup)).toBe(true);
+  expect(importGame(backup!)).toBe(true);
   expect(useGame.getState().pending).toBe(900);
   const restored = load(Date.now());
   expect(restored.pending).toBe(900);

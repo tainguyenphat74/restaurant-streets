@@ -18,7 +18,7 @@ it('bulk store actions preserve saves and report actual levels and milestone gem
   expect(useGame.getState().data).toBe(bought);
   expect(useGame.getState().toasts.length).toBe(count);
   const saved = parseSave(serialize(bought, 1000));
-  expect(saved?.version).toBe(1);
+  expect(saved?.version).toBe(2);
   expect(saved?.restaurants).toEqual(bought.restaurants);
   expect(saved?.coins).toBe(bought.coins);
   expect(saved?.gems).toBe(bought.gems);

@@ -18,6 +18,7 @@ type State = {
   toasts: { id: number; text: string }[];
   pending: number;
   storageError: boolean;
+  saveProtected: boolean;
   now: number;
   select: (id: string | null) => void;
   setTab: (tab: string) => void;
@@ -39,6 +40,7 @@ export const useGame = create<State>((set, get) => ({
   toasts: [],
   pending: 0,
   storageError: false,
+  saveProtected: false,
   now: Date.now(),
   select: (selected) => set({ selected }),
   setTab: (tab) => set({ tab, selected: null }),

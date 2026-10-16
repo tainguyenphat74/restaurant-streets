@@ -6,6 +6,7 @@ let checkpoint = Date.now();
 let hiddenAt: number | null = null;
 export const saveNow = (now = Date.now()) => {
   const s = useGame.getState();
+  if (s.saveProtected) return false;
   const ok = persist(s.data, hiddenAt ?? now, s.pending);
   useGame.setState({ storageError: !ok });
   return ok;
@@ -15,11 +16,10 @@ export function startClock(clock: () => number = Date.now) {
   if (!started) {
     const loaded = load(now);
     useGame.getState().restore(loaded.data, loaded.pending);
-    useGame.setState({ storageError: loaded.blocked });
-    if (loaded.corrupt)
-      useGame
-        .getState()
-        .toast('The save could not be read. A fresh street is ready.');
+    useGame.setState({
+      storageError: loaded.blocked,
+      saveProtected: loaded.corrupt || loaded.blocked,
+    });
     started = true;
     saveNow(now);
   }
@@ -73,6 +73,7 @@ export function claimOffline() {
   saveNow();
 }
 export function resetGame() {
+  useGame.setState({ saveProtected: false });
   useGame.getState().restore(fresh());
   checkpoint = Date.now();
   hiddenAt = document.hidden ? checkpoint : null;
@@ -81,6 +82,7 @@ export function resetGame() {
 export function importGame(raw: string) {
   const saved = parseSave(raw);
   if (!saved) return false;
+  useGame.setState({ saveProtected: false });
   useGame.getState().restore(
     {
       coins: saved.coins,
@@ -98,5 +100,6 @@ export function importGame(raw: string) {
 }
 export function exportGame() {
   const s = useGame.getState();
+  if (s.saveProtected) return null;
   return serialize(s.data, Date.now(), s.pending);
 }

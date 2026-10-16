@@ -14,12 +14,13 @@ import { Modal } from './components/Modal';
 import { Toasts } from './components/Toasts';
 import { Button } from './components/Button';
 export function App() {
-  const { tab, select, pending, storageError } = useGame(
+  const { tab, select, pending, storageError, saveProtected } = useGame(
     useShallow((s) => ({
       tab: s.tab,
       select: s.select,
       pending: s.pending,
       storageError: s.storageError,
+      saveProtected: s.saveProtected,
     })),
   );
   const [settings, setSettings] = useState(false);
@@ -51,9 +52,11 @@ export function App() {
       </main>
       <RestaurantPanel />
       <Toasts />
-      {storageError && (
+      {(storageError || saveProtected) && (
         <div className="storage-warning" role="status">
-          Saving unavailable · Export a backup in Settings
+          {saveProtected
+            ? 'Saving paused: saved data could not be loaded. Original raw save remains untouched. In Settings, import a valid save or explicitly reset to resume saving.'
+            : 'Saving unavailable · Export a backup in Settings'}
         </div>
       )}
       {settings && <Settings close={close} />}{' '}

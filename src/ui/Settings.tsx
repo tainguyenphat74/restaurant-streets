@@ -8,8 +8,15 @@ export function Settings({ close }: { close: () => void }) {
     [message, setMessage] = useState(''),
     [confirm, setConfirm] = useState(false);
   const blocked = useGame((s) => s.storageError);
+  const protectedSave = useGame((s) => s.saveProtected);
   async function copy() {
     const json = exportGame();
+    if (json === null) {
+      setMessage(
+        'Export paused: this temporary street has not recovered your saved progress. Original raw save remains untouched. Import a valid save or reset first.',
+      );
+      return;
+    }
     try {
       await navigator.clipboard.writeText(json);
       setMessage('Save copied to clipboard.');
@@ -27,13 +34,15 @@ export function Settings({ close }: { close: () => void }) {
   return (
     <Modal title="Make yourself at home" close={close}>
       <p>
-        Progress is saved in this browser every 10 seconds. Export a backup to
-        bring your street with you.
+        {protectedSave
+          ? 'Saving is paused. Original raw save remains untouched. This temporary street has not recovered your progress. Import a valid save or explicitly reset to resume saving.'
+          : 'Progress is saved in this browser every 10 seconds. Export a backup to bring your street with you.'}
       </p>
       {blocked && (
         <p role="alert">
-          Browser storage is unavailable. Keep an exported backup; progress may
-          be lost when you close this page.
+          {protectedSave
+            ? 'Browser storage is unavailable. Saved data could not be read; saving and export are paused to protect existing progress.'
+            : 'Browser storage is unavailable. Keep an exported backup; progress may be lost when you close this page.'}
         </p>
       )}
       <Button onClick={copy}>Copy / download save</Button>
