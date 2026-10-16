@@ -1,3 +1,4 @@
+import { RiversideGoal } from '../RiversideGoal';
 import { useShallow } from 'zustand/react/shallow';
 import { useGame } from '../../state/store';
 import { restaurants } from '../../data/restaurants';
@@ -11,6 +12,7 @@ export function KitchenTab() {
       <span className="eyebrow">BEHIND THE COUNTER</span>
       <h1>Your kitchens</h1>
       <p>A happy team keeps the good food coming.</p>
+      <RiversideGoal />
       <div className="card-grid">
         {restaurants.map((c) => (
           <KitchenCard key={c.id} id={c.id} />
