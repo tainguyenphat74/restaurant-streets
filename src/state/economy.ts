@@ -7,7 +7,14 @@ export type RestaurantState = {
   hasManager: boolean;
   register: number;
 };
+// Only playable street IDs belong here; expand with a versioned save migration.
+export type StreetId = 'maple_street';
+export type NeighborhoodState = {
+  currentStreet: StreetId;
+  unlockedStreets: StreetId[];
+};
 export type GameData = {
+  neighborhood: NeighborhoodState;
   coins: number;
   gems: number;
   restaurants: Record<string, RestaurantState>;
@@ -16,6 +23,10 @@ export type GameData = {
 };
 export const milestones = [10, 25, 50, 100];
 export const fresh = (): GameData => ({
+  neighborhood: {
+    currentStreet: 'maple_street',
+    unlockedStreets: ['maple_street'],
+  },
   coins: 0,
   gems: 0,
   restaurants: Object.fromEntries(

@@ -32,7 +32,7 @@ it('restores exact registers levels and currencies', () => {
 it('rejects corrupt schemas and unsupported saves', () => {
   expect(parseSave('oops')).toBeNull();
   for (const change of [
-    { version: 3 },
+    { version: 4 },
     { coins: -1 },
     { coins: Infinity },
     { gems: 0.5 },

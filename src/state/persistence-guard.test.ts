@@ -7,7 +7,17 @@ afterEach(() => {
   vi.useRealTimers();
 });
 
-it.each(['{ broken raw ', '{ "version": 99 }'])(
+it.each([
+  '{ broken raw ',
+  '{ "version": 99 }',
+  JSON.stringify({
+    ...JSON.parse(serialize(fresh(), 1000)),
+    neighborhood: {
+      currentStreet: 'riverside_market',
+      unlockedStreets: ['maple_street', 'riverside_market'],
+    },
+  }),
+])(
   'preserves unreadable local save %s until valid import or reset',
   async (raw) => {
     vi.resetModules();

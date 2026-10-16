@@ -85,6 +85,7 @@ export function importGame(raw: string) {
   useGame.setState({ saveProtected: false });
   useGame.getState().restore(
     {
+      neighborhood: saved.neighborhood,
       coins: saved.coins,
       gems: saved.gems,
       restaurants: saved.restaurants,

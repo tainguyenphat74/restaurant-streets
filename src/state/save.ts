@@ -9,10 +9,10 @@ const saveRestaurantIds = [
   'sushi_station',
 ] as const;
 const saveUpgradeIds = ['ingredients', 'service'] as const;
-export const SAVE_VERSION = 2;
+export const SAVE_VERSION = 3;
 export const SAVE_KEY = 'restaurant-streets-save';
 export type Save = GameData & {
-  version: 2;
+  version: 3;
   savedAt: number;
   pendingOffline: number;
 };
@@ -41,9 +41,10 @@ export function migrateSave(json: string): Save | null {
             'restaurants',
             'upgrades',
             'pendingOffline',
+            ...(v.version === 3 ? ['neighborhood'] : []),
           ].includes(key),
       ) ||
-      (v.version !== 1 && v.version !== SAVE_VERSION) ||
+      (v.version !== 1 && v.version !== 2 && v.version !== SAVE_VERSION) ||
       !validTimestamp(v.savedAt) ||
       !validNumber(v.coins) ||
       !validNumber(v.gems) ||
@@ -60,10 +61,26 @@ export function migrateSave(json: string): Save | null {
       !v.upgrades.every((id: unknown) =>
         saveUpgradeIds.some((known) => known === id),
       ) ||
-      ((v.version === SAVE_VERSION || v.pendingOffline !== undefined) &&
+      ((v.version !== 1 || v.pendingOffline !== undefined) &&
         !validNumber(v.pendingOffline))
     )
       return null;
+    // V3 supports Maple only. Reject inactive IDs and inconsistent/extra state,
+    // independently of neighborhood metadata or future catalog additions.
+    if (v.version === 3) {
+      const n = v.neighborhood;
+      if (
+        !n ||
+        typeof n !== 'object' ||
+        Array.isArray(n) ||
+        Object.keys(n).length !== 2 ||
+        n.currentStreet !== 'maple_street' ||
+        !Array.isArray(n.unlockedStreets) ||
+        n.unlockedStreets.length !== 1 ||
+        n.unlockedStreets[0] !== 'maple_street'
+      )
+        return null;
+    }
     for (const id of saveRestaurantIds) {
       const r = v.restaurants[id];
       if (
@@ -86,6 +103,16 @@ export function migrateSave(json: string): Save | null {
     }
     if (!v.restaurants.noodle_nook.owned) return null;
     return {
+      neighborhood:
+        v.version === 3
+          ? {
+              currentStreet: v.neighborhood.currentStreet,
+              unlockedStreets: [...v.neighborhood.unlockedStreets],
+            }
+          : {
+              currentStreet: 'maple_street',
+              unlockedStreets: ['maple_street'],
+            },
       version: SAVE_VERSION,
       savedAt: v.savedAt,
       coins: v.coins,
@@ -112,7 +139,8 @@ export function migrateSave(json: string): Save | null {
     return null;
   }
 }
-// V1 → V2 preserves the flat Maple state, normalizing only legacy omitted pending.
+// V1/V2 → V3 adds only historical Maple neighborhood defaults after validation.
+// Only V1 may omit pending rewards; migrations award and unlock nothing.
 // Both loading and import use this same validated migration boundary.
 export const parseSave = migrateSave;
 export function serialize(data: GameData, now: number, pendingOffline = 0) {
@@ -151,6 +179,7 @@ export function load(
     if (!saved)
       return { data: fresh(), pending: 0, blocked: false, corrupt: true };
     const data: GameData = {
+      neighborhood: saved.neighborhood,
       coins: saved.coins,
       gems: saved.gems,
       restaurants: saved.restaurants,
