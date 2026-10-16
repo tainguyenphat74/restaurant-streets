@@ -38,7 +38,8 @@ Split any large item into smaller tested releases and update this table. Do not 
 
 ## Current activity
 
-- Beginning bulk upgrades and existing-milestone progress. Implementation and release verification pending.
+- Pure bulk helpers implemented with bounded sequential purchases; original single action and save schema unchanged. Buy10 / next milestone buy up to the affordable target and quote the actual count; unowned plots buy once. Next milestone stops after existing level 100 reward.
+- TDD evidence: new helper suite failed first (missing module), then all 60 tests passed across 8 files. Covers sequential costs/outcomes, crossed milestones, repeated clicks, exact/insufficient funds, 999/1000, unowned plots and invalid IDs/balances. UI and production browser verification pending; not pushed or deployed.
 - Autonomous continuation is being configured on a two-hour cadence; no claim of scheduled execution until the scheduler confirms creation.
 
 ## Release history
