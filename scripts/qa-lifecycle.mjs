@@ -59,16 +59,14 @@ try {
   await expect(page.getByRole('dialog')).toHaveCount(0);
   const fixture = await page.evaluate(() => window.restaurantQA().data);
   await page.getByRole('button', { name: 'Settings', exact: true }).click();
-  await page
-    .getByLabel('Import a saved street')
-    .fill(
-      JSON.stringify({
-        ...fixture,
-        version: 1,
-        savedAt: 0,
-        pendingOffline: 75,
-      }),
-    );
+  await page.getByLabel('Import a saved street').fill(
+    JSON.stringify({
+      ...fixture,
+      version: 1,
+      savedAt: 0,
+      pendingOffline: 75,
+    }),
+  );
   await page.getByRole('button', { name: 'Restore save' }).click();
   await page.getByRole('button', { name: 'Back to the neighborhood' }).click();
   await expect(
@@ -99,8 +97,15 @@ try {
   const bp = await blocked.newPage();
   await bp.goto(base, { waitUntil: 'domcontentloaded' });
   await expect(
-    bp.getByRole('status').filter({ hasText: 'Saving unavailable' }),
+    bp.getByRole('status').filter({ hasText: 'Saving paused' }),
   ).toBeVisible();
+  await bp.getByRole('button', { name: 'Settings', exact: true }).click();
+  await expect(bp.getByRole('alert')).toContainText(
+    'Browser storage is unavailable',
+  );
+  await expect(bp.getByRole('alert')).toContainText(
+    'saving and export are paused',
+  );
   await blocked.close();
   console.log(
     'PASS: reduced motion, rapid tab teardown during asset fetch, single canvas, canvas building selection, invalid import, Escape, imported pending reward/refresh/claim, blocked storage.',
