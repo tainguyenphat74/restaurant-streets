@@ -4,6 +4,12 @@ import { decorationLayout, depthAt } from '../world';
 import { loadAssets, metadata, previews } from '../assets';
 import { placeholders } from '../placeholders';
 import { useGame } from '../../state/store';
+import {
+  advanceCustomer,
+  createCustomer,
+  population,
+  type Customer,
+} from '../customers';
 import { totalIncome } from '../../state/economy';
 export type MapHooks = {
   select: (id: string) => void;
@@ -13,6 +19,8 @@ export class StreetScene extends Phaser.Scene {
   buildings = new Map<string, Phaser.GameObjects.Image>();
   private lots = new Map<string, Phaser.GameObjects.Graphics>();
   private walkers: Phaser.GameObjects.Container[] = [];
+  private customers: Customer[] = [];
+  private walkerLegs = new WeakMap<Phaser.GameObjects.Container, Phaser.GameObjects.Rectangle[]>();
   private coins: Phaser.GameObjects.Image[] = [];
   private outline!: Phaser.GameObjects.Graphics;
   private ready = false;
@@ -97,7 +105,7 @@ export class StreetScene extends Phaser.Scene {
         .image(p.x, p.y, key)
         .setOrigin(m.anchorX, m.anchorY)
         .setScale(m.scale)
-        .setDepth(plot.x + plot.y);
+        .setDepth(depthAt(p.y - 45));
       this.buildings.set(plot.id, b);
       previews[plot.id] = this.textures.getBase64(key);
     }
@@ -187,8 +195,7 @@ export class StreetScene extends Phaser.Scene {
     this.scale.on('resize', this.recenter, this);
     const motion = () => {
       this.tweens.killAll();
-      for (const w of this.walkers) w.destroy();
-      this.walkers = [];
+      for (const p of plots) this.buildings.get(p.id)?.setY(iso(p.x, p.y).y);
       for (const c of this.coins) c.setVisible(false);
       this.refresh();
     };
@@ -223,37 +230,6 @@ export class StreetScene extends Phaser.Scene {
           : 0,
     };
   }
-  private walk(w: Phaser.GameObjects.Container, index: number) {
-    if (this.disposed || this.reduced.matches) return;
-    const owned = plots.filter(
-      (p) => useGame.getState().data.restaurants[p.id].owned,
-    );
-    const visit = Math.random() < 0.25 ? owned[index % owned.length] : null;
-    const p = visit
-      ? iso(visit.x, visit.y)
-      : iso(2 + Math.random() * 10, index % 2 ? 6 : 9);
-    this.tweens.add({
-      targets: w,
-      x: p.x,
-      y: p.y,
-      duration: Math.max(
-        1800,
-        Phaser.Math.Distance.Between(w.x, w.y, p.x, p.y) * 35,
-      ),
-      onComplete: () => {
-        if (visit) {
-          this.tweens.add({
-            targets: w,
-            alpha: 0,
-            duration: 250,
-            yoyo: true,
-            hold: 1200,
-            onComplete: () => this.walk(w, index),
-          });
-        } else this.walk(w, index);
-      },
-    });
-  }
   refresh() {
     if (!this.ready) return;
     const state = useGame.getState();
@@ -275,38 +251,62 @@ export class StreetScene extends Phaser.Scene {
         );
       }
     }
-    const count = Math.min(
-      20,
-      10 + Math.floor(Math.log10(1 + totalIncome(state.data, state.now)) * 2),
-    );
+    const count = population(totalIncome(state.data, state.now));
     while (this.walkers.length > count) {
-      const walker = this.walkers.pop()!;
-      this.tweens.killTweensOf(walker);
-      this.tweens.killTweensOf(walker.list);
-      walker.destroy();
+      this.walkers.pop()!.destroy();
+      this.customers.pop();
     }
     while (this.walkers.length < count) {
       const i = this.walkers.length,
-        p = iso(2 + (i % 10), i % 2 ? 6 : 9),
-        body = this.add
-          .image(0, 0, 'walker')
-          .setOrigin(metadata('walker').anchorX, metadata('walker').anchorY)
-          .setScale(metadata('walker').scale)
-          .setTint([0xffffff, 0xa4c8df, 0xc4b1d9, 0xffd482][i % 4]);
-      const w = this.add.container(p.x, p.y, [body]).setDepth(depthAt(p.y));
-      this.walkers.push(w);
-      if (!this.reduced.matches) {
-        this.tweens.add({
-          targets: body,
-          y: -3,
-          duration: 220 + i * 9,
-          yoyo: true,
-          repeat: -1,
-        });
-        this.walk(w, i);
+        customer = createCustomer(i);
+      const shadow = this.add.ellipse(0, -1, 17, 7, 0x435d45, 0.22);
+      const m = metadata('walker');
+      const walker = this.add.container(customer.x, customer.y, [shadow]);
+      if (m.file) {
+        walker.add(
+          this.add.image(0, 0, 'walker')
+            .setOrigin(m.anchorX, m.anchorY)
+            .setScale(m.scale),
+        );
+      } else {
+        const legs = [
+          this.add.rectangle(-3, -5, 4, 10, 0x526576),
+          this.add.rectangle(3, -5, 4, 10, 0x526576),
+        ];
+        const shirt = this.add.rectangle(
+          0,
+          -17,
+          13,
+          16,
+          [0xe78870, 0x65a8aa, 0x8f87bd, 0xeebc55][i % 4],
+        );
+        const head = this.add.circle(
+          0,
+          -30,
+          7,
+          [0xffd6ac, 0xc98d65, 0x956447][i % 3],
+        );
+        const hair = this.add.ellipse(
+          -1,
+          -35,
+          14,
+          7,
+          [0x644c3e, 0x393c40, 0xc49858][i % 3],
+        );
+        const nose = this.add.circle(
+          6,
+          -29,
+          2,
+          [0xffd6ac, 0xc98d65, 0x956447][i % 3],
+        );
+        walker.add([...legs, shirt, head, hair, nose]);
+        this.walkerLegs.set(walker, legs);
       }
+      this.walkers.push(walker);
+      this.customers.push(customer);
     }
   }
+
   private floatCoins(id: string) {
     if (this.reduced.matches) return;
     const plot = plots.find((p) => p.id === id)!,
@@ -349,18 +349,40 @@ export class StreetScene extends Phaser.Scene {
     c.centerOn(0, 365);
   }
   snapshot() {
-    const c = this.cameras.main;
+    const c = this.cameras?.main;
+    if (this.disposed || !this.ready || !c) return { ready: false };
     return {
-      ready: this.ready,
+      ready: true,
       zoom: c.zoom,
       scrollX: c.scrollX,
       scrollY: c.scrollY,
       walkers: this.walkers.length,
+      reducedMotion: this.reduced.matches,
+      customers: this.customers.map((c) => ({
+        ...c,
+        route: c.route.map((p) => ({ ...p })),
+      })),
     };
   }
-  update() {
+  update(time: number, delta: number) {
     if (!this.ready) return;
-    for (const walker of this.walkers) walker.setDepth(depthAt(walker.y));
+    const owned = plots
+      .filter((p) => useGame.getState().data.restaurants[p.id].owned)
+      .map((p) => p.id);
+    this.walkers.forEach((walker, i) => {
+      const customer = this.customers[i],
+        oldX = customer.x;
+      if (!this.reduced.matches) advanceCustomer(customer, delta / 1000, owned);
+      walker
+        .setPosition(customer.x, customer.y)
+        .setDepth(depthAt(customer.y))
+        .setVisible(customer.phase !== 'dine');
+      const moving = !this.reduced.matches && customer.route.length > 0;
+      if (customer.x !== oldX) walker.setScale(customer.x < oldX ? -1 : 1, 1);
+      this.walkerLegs.get(walker)?.forEach((leg, n) => {
+        leg.y = -5 + (moving ? Math.sin(time / 110 + i + (n + 1) * Math.PI) * 2 : 0);
+      });
+    });
     const c = this.cameras.main,
       key = [c.scrollX, c.scrollY, c.zoom, c.width, c.height].join(':');
     if (key === this.projection) return;

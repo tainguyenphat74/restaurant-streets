@@ -156,6 +156,15 @@ await expect(
 ).toBeVisible();
 await mobile.screenshot({ path: 'test-results/mobile-panel.png' });
 await mobile.getByRole('button', { name: 'Close restaurant' }).click();
+await mobile.waitForFunction(
+  () => window.restaurantQA().data.restaurants.noodle_nook.register >= 12,
+);
+await mobile.getByRole('button', { name: 'Collect from Noodle Nook' }).click();
+await mobile.getByRole('button', { name: /Noodle Nook Lv/ }).click();
+await mobile.getByRole('button', { name: /Upgrade restaurant/ }).click();
+await mobile.getByRole('button', { name: 'Close restaurant' }).click();
+expect((await snap(mobile)).data.restaurants.noodle_nook.level).toBe(2);
+await mobile.screenshot({ path: 'test-results/mobile-progress.png' });
 for (const name of ['Kitchen', 'Upgrades', 'Rankings', 'Street'])
   await mobile
     .getByRole('navigation')
