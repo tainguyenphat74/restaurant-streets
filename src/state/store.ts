@@ -1,3 +1,4 @@
+import { buyLevels, type BuyMode } from './bulk';
 import { create } from 'zustand';
 import {
   fresh,
@@ -24,6 +25,7 @@ type State = {
     action: 'upgrade' | 'collect' | 'hire' | 'global' | 'boost',
     id: string,
   ) => void;
+  bulkUpgrade: (id: string, mode: BuyMode) => void;
   tick: (start: number, end: number) => void;
   toast: (text: string) => void;
   restore: (data: GameData, pending?: number) => void;
@@ -71,6 +73,17 @@ export const useGame = create<State>((set, get) => ({
               ? 'Rush hour! Double income for 10 minutes.'
               : 'Street upgrade purchased!',
       );
+  },
+  bulkUpgrade: (id, mode) => {
+    const before = get().data;
+    const data = buyLevels(before, id, mode);
+    if (data === before) return;
+    set({ data });
+    const count = data.restaurants[id].level - before.restaurants[id].level;
+    const gems = data.gems - before.gems;
+    get().toast(
+      `Upgraded ${count} level${count === 1 ? '' : 's'}${gems ? ` · +${gems} gems 💎` : ' ✨'}`,
+    );
   },
   tick: (start, end) => {
     const s = get(),

@@ -1,3 +1,5 @@
+import { useState } from 'react';
+import { quoteLevels, nextMilestone, type BuyMode } from '../state/bulk';
 import { useShallow } from 'zustand/react/shallow';
 import { useGame } from '../state/store';
 import { config } from '../data/restaurants';
@@ -9,12 +11,17 @@ import { Pill } from './components/Pill';
 import { StatItem } from './components/StatItem';
 export function RestaurantPanel() {
   const selected = useGame((s) => s.selected);
-  return selected ? <SelectedRestaurant selected={selected} /> : null;
+  return selected ? (
+    <SelectedRestaurant key={selected} selected={selected} />
+  ) : null;
 }
 function SelectedRestaurant({ selected }: { selected: string }) {
-  const { select, coins, r, act, revenue, rate } = useGame(
+  const [mode, setMode] = useState<BuyMode>('1');
+  const { select, coins, r, act, bulkUpgrade, data, revenue, rate } = useGame(
     useShallow((s) => ({
       select: s.select,
+      data: s.data,
+      bulkUpgrade: s.bulkUpgrade,
       coins: s.data.coins,
       r: s.data.restaurants[selected],
       act: s.act,
@@ -26,6 +33,8 @@ function SelectedRestaurant({ selected }: { selected: string }) {
   const art = metadata('building_' + selected);
   const c = config(selected),
     cost = r.owned ? upgradeCost(selected, r.level) : c.baseCost;
+  const quote = quoteLevels(data, selected, mode);
+  const target = nextMilestone(r.level);
   return (
     <aside className="restaurant-panel card" aria-label={c.name}>
       <button
@@ -70,13 +79,66 @@ function SelectedRestaurant({ selected }: { selected: string }) {
             : `${format(c.baseIncome)} base 🪙 / sec`}
         </strong>
       </div>
+      {r.owned && (
+        <>
+          <div className="buy-modes" role="group" aria-label="Upgrade quantity">
+            {(
+              [
+                ['1', 'Buy1'],
+                ['10', 'Buy10'],
+                ['milestone', 'Next milestone'],
+                ['max', 'Buymax'],
+              ] as const
+            ).map(([value, label]) => (
+              <button
+                key={value}
+                aria-pressed={mode === value}
+                disabled={r.level >= 1000 || (value === 'milestone' && !target)}
+                onClick={() => setMode(value)}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+          <p className="bulk-quote" aria-live="polite">
+            {quote.count} level{quote.count === 1 ? '' : 's'} · 🪙{' '}
+            {format(quote.cost)}
+            {quote.gems > 0 && ` · +${quote.gems} gems`}
+            {quote.count === 0 &&
+              r.level < 1000 &&
+              (mode !== 'milestone' || target) &&
+              ' · Insufficient coins'}
+          </p>
+          <small>Buys up to the affordable quantity.</small>
+          <div className="milestone-progress">
+            {target ? (
+              <>
+                <label htmlFor="milestone-progress">
+                  Level {r.level} / {target} · Next milestone
+                </label>
+                <progress
+                  id="milestone-progress"
+                  value={r.level}
+                  max={target}
+                />
+                <small>At level {target}: ×2 income milestone · +5 gems</small>
+              </>
+            ) : (
+              <p>All milestones complete · All four rewards earned</p>
+            )}
+            {r.level >= 1000 && <p>Max level reached · Level 1000</p>}
+          </div>
+        </>
+      )}
       <Button
         className="w-full"
-        disabled={coins < cost || r.level >= 1000}
-        onClick={() => act('upgrade', selected)}
+        disabled={r.owned ? quote.count === 0 : coins < cost}
+        onClick={() =>
+          r.owned ? bulkUpgrade(selected, mode) : act('upgrade', selected)
+        }
       >
         {r.owned ? 'Upgrade restaurant' : 'Buy restaurant'}{' '}
-        <span>🪙 {format(cost)}</span>
+        <span>🪙 {format(r.owned && mode !== '1' ? quote.cost : cost)}</span>
       </Button>
       {r.owned && (
         <>
