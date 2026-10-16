@@ -2,51 +2,56 @@
 
 ## Working agreement
 
-The owner authorized continuous autonomous development of this game: small coherent changes, tests, focused commits, regular pushes, and verified releases to https://restaurant-streets.tainguyenphat.com/. No per-release approval is required. Keep this file current so progress is visible in GitHub.
+The owner authorized continuous autonomous development of this game: small coherent changes, tests, focused commits, regular pushes, and verified releases to https://restaurant-streets.tainguyenphat.com/. No per-release approval is required. This file is the visible progress record.
 
-Scope: this repository and its existing Vercel project only. Preserve player saves and earned progress. Do not reset players, force-push, buy services, add monetization/tracking, change credentials, or modify unrelated infrastructure. Prestige must remain optional and is not the current priority. No real-user statistics are available; never claim measured retention or completion times.
+Scope: this repository and its existing Vercel project only. Preserve player saves and earned progress. Do not reset players, force-push, buy services, introduce monetization/tracking, change credentials, or modify unrelated infrastructure. Prestige must remain optional; expansion comes first. No real-user statistics are available: simulation assumptions are not measured retention or completion times.
 
 ## Release discipline
 
-- Inspect current Git state and this file before work; resume intended interrupted work rather than overwriting it.
-- Build the smallest independently useful slice. Use focused sequential commits, not an artificial history after a giant implementation.
-- Keep pure economy logic testable; use Codex for implementation and independent review/testing before publication.
-- Require unit tests, TypeScript/production build, relevant desktop/mobile browser interactions, and save compatibility checks.
-- Push normally to `main` only after checks pass. Verify the exact source commit in Vercel, Ready production state, custom-domain alias, and real live interactions before marking a release live.
-- A `main` push currently creates a preview. Inspect it, then promote the exact verified deployment to production if needed. Do not blindly issue duplicate `vercel --prod` builds.
-- Failed verification means no release. Record the blocker and retain recoverable work. Never discard somebody else's changes or overwrite player saves to make tests pass.
-- Scheduled runs take at most one coherent release and then stop. Avoid overlapping writers. When the queue is complete, audit and fix meaningful regressions rather than adding filler features.
+- Inspect Git state and this file first; preserve and resume intended interrupted work instead of overwriting it.
+- Build small independently useful slices and commit sequentially. Prefer Codex implementation and independent review/testing; if its CLI quota blocks a bounded task, direct implementation with the same tests/review is permitted by the owner's broad authorization. Record actual blockers rather than endlessly retrying.
+- Require unit tests, TypeScript/production build, diff checks, relevant desktop/mobile browser interactions and save compatibility checks before publication.
+- Push normally to `main` only after checks pass. A main push currently creates a preview: wait for the exact SHA's deployment, promote it if needed, and wait for the resulting production deployment. Never blindly create duplicate deployments.
+- Verify source SHA, Ready production state, custom-domain alias and actual live feature interactions before marking a release live. A docs-only push after verification needs no promotion when runtime code is unchanged.
+- Failed verification means no release. Record blockers and retain recoverable work. Never discard other work or overwrite player saves to make tests pass.
+- Scheduled runs take one coherent release at most. Avoid overlapping writers using `/tmp/restaurant-streets-autodev.lock`. When the queue is complete, audit and fix meaningful regressions rather than adding filler features.
 
 ## Prioritized queue
 
 | Item | Status | Acceptance boundary |
 | --- | --- | --- |
-| Bulk upgrades and clear milestone progress | In progress | Buy 1 / 10 / next milestone / max; exact sequential costs and milestone gems; level cap enforced; unchanged existing saves; usable mobile controls. Display existing milestone rewards honestly without silently rebalancing income. |
-| Riverside Market — safe data/save foundation | Queued | Separate neighborhood definitions and versioned migration preserving all existing coins, gems, restaurants, managers, boosts and pending offline rewards; strict invalid-save handling. Keep incomplete features inactive. |
-| Riverside Market — playable expansion | Queued | Clear earned unlock goal; distinct second street and restaurants; switch streets without losing Maple Street; both neighborhoods earn correctly; purchases, managers, offline income, depth and touch controls work. Choose documented, simulation-tested pacing rather than unbounded inflation. |
-| Late-game milestones and balance | Queued | Simulate fresh/mid/late progression and document assumptions; add worthwhile achievable goals after the existing reward milestones without nerfing earned progress or simply raising the cap. |
-| Restaurant mastery | Queued | Short permanent achievement tracks with idempotent rewards and visible cosmetic/perk unlocks; old saves remain valid; no mandatory reset or daily-streak penalty. |
-| Expansion and mastery polish | Queued | Discoverable goals, useful completion state, mobile usability, accessibility, performance and regression coverage. |
+| Bulk upgrades and clear milestone progress | **Live** | Buy 1 / Buy 10 / Next milestone / Buy max; partial affordable quantities quoted honestly; exact sequential costs/gems; cap enforced; unchanged old saves; mobile controls. |
+| Riverside Market — safe data/save foundation | **Next** | Separate neighborhood definitions and versioned migration preserving existing coins, gems, restaurant levels/managers/registers, boosts and pending offline rewards; strict invalid-save handling. Incomplete features stay inactive. |
+| Riverside Market — playable expansion | Queued | Earned unlock goal, distinct second street/restaurants, switch streets without losing Maple Street, both neighborhoods earn correctly; purchases/managers/offline income/depth/touch work. Document simulation-tested pacing. |
+| Late-game milestones and balance | Queued | Simulate fresh/mid/late progression; add achievable goals beyond current rewards without nerfing earned progress or merely raising caps. |
+| Restaurant mastery | Queued | Short permanent achievement tracks, idempotent rewards, visible cosmetic/perk unlocks; valid old saves survive; no forced reset or daily-streak penalty. |
+| Expansion and mastery polish | Queued | Discoverable goals, completion state, accessibility, mobile usability, performance and regression coverage. |
 
-Split any large item into smaller tested releases and update this table. Do not label a data-only foundation as a playable neighborhood.
+Split large items into smaller tested releases. A data foundation is not a playable neighborhood.
 
-## Published baseline
+## Current activity and automation
 
-- Richer cuisine-specific procedural storefronts and sidewalk customer visits are live.
-- Doorway draw-order fix: `4a70aac`.
-- Verification at handoff: 53 unit tests; production build; desktop/mobile live earning, upgrades, purchases, managers, offline claims, saves, gestures and customer visit cycles passed with zero page errors.
-
-## Current activity
-
-- Pure bulk helpers implemented with bounded sequential purchases; original single action and save schema unchanged. Buy10 / next milestone buy up to the affordable target and quote the actual count; unowned plots buy once. Next milestone stops after existing level 100 reward.
-- TDD evidence: new helper suite failed first (missing module), then all 60 tests passed across 8 files. Covers sequential costs/outcomes, crossed milestones, repeated clicks, exact/insufficient funds, 999/1000, unowned plots and invalid IDs/balances. Helper commit: `a07d151`.
-- Panel/store implementation complete: default Buy1 retains existing upgrade/purchase button names; Buy10 / Next milestone / Buymax show affordable counts and costs. Existing milestone progress previews ×2 income and +5 gems, then explicitly completes at 100; cap state is explicit at 1000. No save schema, formulas, art, or customer changes.
-- Final unit verification: `npm test` — 61 tests passed across 9 files, including store action and version-1 save round-trip. `node --check scripts/qa-bulk.mjs` and `git diff --check` passed. Production build passed (Vite bundle-size warning remains).
-- Browser coverage added in `scripts/qa-bulk.mjs`; requires `QA_URL=<stable production build URL> node scripts/qa-bulk.mjs`. Includes desktop/mobile real fresh earning/default upgrade, then explicitly labeled supported-import bulk boundary fixtures; no fixture screenshots. Checks quote cost/count, sequential click balances, milestone gems/completion, insufficient/exact coins, cap, keyboard, overflow, reload, and pageerrors. **Not executed in this slice:** parent owns stable production browser QA, review, push and deployment. No HMR browser tests used; not pushed, deployed, or live-verified. Queue remains in progress pending that verification.
-- Autonomous continuation is configured every two hours (local delivery; progress belongs in this file). Initial scheduled attempts were blocked before execution by the provider's quota limit; they did not change or publish game code. The Codex implementation CLI also hit a usage limit while addressing review, so that small correction is being completed directly. Scheduled presence is not evidence that a release ran.
-- Independent review identified unnecessary full-game allocations in Buy max quotes and a full-data React subscription. A new performance regression failed first; numeric quote simulation now avoids restaurant-map copies, actual purchases make one final copy, and the panel memoizes on relevant primitive inputs. All 62 unit tests passed; the TypeScript/production build and diff checks passed.
-- Independent browser verification: fresh earning/default upgrades, bulk quotes and purchases, exact/insufficient funds, milestone gems, completion/cap, import/reload, keyboard and mobile overflow passed on desktop/mobile. Main gameplay and customer suites also passed, with zero page errors. Headless WebGL bulk-fixture stress stalled on mobile in two runs (including a standalone run); changing only the renderer to Canvas made the full fixture suite pass. The bulk suite now uses Canvas by default, with QA_WEBGL=1 for GPU runners; normal desktop/mobile WebGL gameplay remains covered by qa.mjs. Live verification pending.
+- Bulk-upgrade release is published and live-verified; Riverside Market's compatibility foundation is the next slice.
+- Autonomous continuation is configured every two hours with local delivery; progress belongs here rather than frequent chat messages.
+- The first two scheduled runs were blocked before execution by provider quota (429); they made no game changes. Codex CLI separately hit its usage limit during the performance correction, which was completed directly. A configured schedule does not prove a run succeeded. Resume from this file on the next healthy run.
 
 ## Release history
 
-New entries must separate implemented, tested, pushed, deployment-ready and live-verified states, and include real commit/deployment handles and any limitations.
+### Bulk upgrades and milestone progress — live
+
+- Runtime source: `159ef10c24c044fd80714a993126d3888b43f830` on main.
+- Focused commits: `a07d151` (pure quote/purchase helpers), `df67213` (store/UI/browser tests), `159ef10` (review performance correction and test).
+- UI: Buy 1, Buy 10, Next milestone and Buy max; actual affordable levels/cost/gems; existing milestone progress and explicit level-100 reward completion / level-1000 cap.
+- Existing income/cost formulas, milestone schedule, version-1 save format and single-purchase semantics are unchanged. This release improves upgrade usability; it does not yet add endgame content.
+- Independent review caught up to 999 immutable simulated game allocations per quote plus a full-data React subscription. Regression failed first; quotes now use scalar sequential arithmetic, actual purchases copy the restaurant map once, and the panel memoizes on relevant inputs.
+- Verification: **62 unit tests / 10 files**; TypeScript + production build; diff checks. Desktop/mobile fresh earning, default upgrades, bulk cost/count, exact/insufficient funds, milestone gems, completion, cap, imports/reload, keyboard and overflow passed. Standard WebGL gameplay, purchases/managers/offline claims/gestures passed. Customer suite passed locally.
+- Headless-only limitation: WebGL bulk-fixture stress stalled on mobile twice. Changing only the renderer to Canvas passed all fixtures. `qa-bulk.mjs` therefore defaults to Canvas; `QA_WEBGL=1` enables the additional GPU stress path. `qa.mjs` still exercises default WebGL desktop/mobile gameplay. Do not hide this distinction in reports.
+- Production deployment: `dpl_319FhMyfHAvHeZew2Bfc2ZdSjK5M`, https://restaurant-streets-2328a6yvh-nguyentai2760gmailcoms-projects.vercel.app (Ready, exact runtime SHA).
+- Live alias https://restaurant-streets.tainguyenphat.com/ confirmed on that deployment. **Live desktop/mobile bulk suite, standard gameplay suite and lifecycle suite passed with zero page errors.**
+- Existing Vite bundle-size warning remains.
+
+### Storefronts and ambient customers — live baseline
+
+- Cuisine-specific procedural storefronts; same-side sidewalk approach, queue, hidden dining and return; external walker asset support and runtime reduced-motion behavior.
+- Doorway draw-order fix: `4a70aac`.
+- Original verification: 53 unit tests, production build and desktop/mobile live gameplay/customer cycles, with zero page errors.
