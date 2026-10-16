@@ -1,12 +1,13 @@
 import Phaser from 'phaser';
 import { iso, plots } from '../iso';
-import { decorationLayout, depthAt } from '../world';
+import { buildingDepth, decorationLayout, depthAt } from '../world';
 import { loadAssets, metadata, previews } from '../assets';
 import { placeholders } from '../placeholders';
 import { useGame } from '../../state/store';
 import {
   advanceCustomer,
   createCustomer,
+  entrance,
   population,
   type Customer,
 } from '../customers';
@@ -105,7 +106,7 @@ export class StreetScene extends Phaser.Scene {
         .image(p.x, p.y, key)
         .setOrigin(m.anchorX, m.anchorY)
         .setScale(m.scale)
-        .setDepth(depthAt(p.y - 45));
+        .setDepth(buildingDepth(p.y, entrance(plot.id).door.y));
       this.buildings.set(plot.id, b);
       previews[plot.id] = this.textures.getBase64(key);
     }

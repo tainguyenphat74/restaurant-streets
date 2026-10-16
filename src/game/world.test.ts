@@ -1,7 +1,20 @@
 import { describe, expect, it } from 'vitest';
-import { decorationLayout, depthAt } from './world';
-import { iso } from './iso';
+import { buildingDepth, decorationLayout, depthAt } from './world';
+import { iso, plots } from './iso';
+import { entrance } from './customers';
 describe('street depth and deterministic decoration placement', () => {
+  it.each(plots)(
+    'sorts doorway customers in front of $id while retaining ground sorting',
+    (plot) => {
+      const ground = iso(plot.x, plot.y);
+      const { door } = entrance(plot.id);
+      const building = buildingDepth(ground.y, door.y);
+      // Queue and newly leaving customers share the doorway ground position.
+      expect(depthAt(door.y)).toBeGreaterThan(building);
+      expect(depthAt(ground.y - 90)).toBeLessThan(building);
+      expect(depthAt(ground.y)).toBeGreaterThan(building);
+    },
+  );
   it('sorts a walker by its isometric ground position', () => {
     expect(depthAt(iso(4, 5).y)).toBe(9);
     expect(depthAt(iso(11, 10).y)).toBe(21);

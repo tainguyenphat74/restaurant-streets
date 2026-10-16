@@ -6,6 +6,10 @@ export type Decoration = {
 };
 // screenY = (gx + gy) * 32, so moving entities sort with buildings.
 export const depthAt = (screenY: number): number => screenY / 32;
+// Keep the facade's existing sort plane, capped one pixel behind its door so
+// visible queue/leave customers win depth ties without lifting other walkers.
+export const buildingDepth = (groundY: number, doorY: number): number =>
+  depthAt(Math.min(groundY - 45, doorY - 1));
 export function decorationLayout(seed: number): Decoration[] {
   let state = seed >>> 0;
   const random = () => {
