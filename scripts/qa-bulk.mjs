@@ -13,7 +13,15 @@ const format = (n) => {
   }
   return n.toLocaleString('en-US', { maximumFractionDigits: 1 });
 };
-const browser = await chromium.launch({ args: ['--no-sandbox'] });
+// Use Canvas for repeated import-boundary fixtures on headless CPU runners.
+// qa.mjs covers default WebGL desktop/mobile gameplay; QA_WEBGL=1 additionally
+// stress-tests these fixtures with WebGL on runners with a stable GPU driver.
+const browser = await chromium.launch({
+  args: [
+    '--no-sandbox',
+    ...(process.env.QA_WEBGL === '1' ? [] : ['--disable-webgl']),
+  ],
+});
 try {
   for (const mobile of [false, true]) {
     const context = await browser.newContext({
@@ -25,6 +33,7 @@ try {
       reducedMotion: 'reduce',
     });
     const page = await context.newPage();
+    page.setDefaultTimeout(20000);
     const errors = [];
     page.on('pageerror', (e) => errors.push(e.message));
     const ready = () =>
@@ -46,7 +55,7 @@ try {
       .getByRole('button', { name: 'Collect from Noodle Nook' })
       .click();
     await open();
-    await expect(mode('Buy1')).toHaveAttribute('aria-pressed', 'true');
+    await expect(mode('Buy 1')).toHaveAttribute('aria-pressed', 'true');
     await expect(page.locator('.bulk-quote')).toContainText('1 level');
     await upgrade.click();
     expect((await data()).restaurants.noodle_nook.level).toBe(2);
@@ -85,6 +94,9 @@ try {
       return state;
     }
     async function purchase(name, limit) {
+      console.log(
+        `Checking ${mobile ? 'mobile' : 'desktop'} ${name} (${limit})`,
+      );
       await mode(name).click();
       const before = await data();
       let total = 0;
@@ -114,11 +126,11 @@ try {
     }
     await fixture(1, 25);
     // Keyboard selection and activation of an ordinary button.
-    await mode('Buy10').focus();
+    await mode('Buy 10').focus();
     await page.keyboard.press('Enter');
-    await expect(mode('Buy10')).toHaveAttribute('aria-pressed', 'true');
+    await expect(mode('Buy 10')).toHaveAttribute('aria-pressed', 'true');
     await expect(page.locator('.bulk-quote')).toContainText('2 levels');
-    await purchase('Buy10', 10);
+    await purchase('Buy 10', 10);
     await expect(upgrade).toBeDisabled();
     await fixture(9, 1e6);
     await purchase('Next milestone', 1);
@@ -131,7 +143,7 @@ try {
     await purchase('Next milestone', 15);
     expect((await data()).gems).toBe(10);
     await fixture(1, 1e9);
-    await purchase('Buymax', 999);
+    await purchase('Buy max', 999);
     expect((await data()).gems).toBe(20);
     await expect(mode('Next milestone')).toBeDisabled();
     await expect(page.locator('.milestone-progress')).toContainText(
@@ -141,15 +153,15 @@ try {
     await purchase('Next milestone', 1);
     await expect(mode('Next milestone')).toBeDisabled();
     await expect(upgrade).toBeDisabled();
-    await purchase('Buy10', 10);
+    await purchase('Buy 10', 10);
     expect((await data()).gems).toBe(5);
     await fixture(1, 11.49);
-    await purchase('Buy10', 10);
+    await purchase('Buy 10', 10);
     await fixture(1, 11.5);
-    await purchase('Buy1', 1);
+    await purchase('Buy 1', 1);
     expect((await data()).coins).toBe(0);
     await fixture(999, 10 * 1.15 ** 999);
-    await purchase('Buymax', 999);
+    await purchase('Buy max', 999);
     await expect(upgrade).toBeDisabled();
     await expect(page.locator('.milestone-progress')).toContainText(
       'Max level reached',

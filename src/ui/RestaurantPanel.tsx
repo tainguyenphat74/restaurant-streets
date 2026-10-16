@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { quoteLevels, nextMilestone, type BuyMode } from '../state/bulk';
 import { useShallow } from 'zustand/react/shallow';
 import { useGame } from '../state/store';
@@ -17,10 +17,10 @@ export function RestaurantPanel() {
 }
 function SelectedRestaurant({ selected }: { selected: string }) {
   const [mode, setMode] = useState<BuyMode>('1');
-  const { select, coins, r, act, bulkUpgrade, data, revenue, rate } = useGame(
+  const { select, coins, gems, r, act, bulkUpgrade, revenue, rate } = useGame(
     useShallow((s) => ({
       select: s.select,
-      data: s.data,
+      gems: s.data.gems,
       bulkUpgrade: s.bulkUpgrade,
       coins: s.data.coins,
       r: s.data.restaurants[selected],
@@ -33,7 +33,10 @@ function SelectedRestaurant({ selected }: { selected: string }) {
   const art = metadata('building_' + selected);
   const c = config(selected),
     cost = r.owned ? upgradeCost(selected, r.level) : c.baseCost;
-  const quote = quoteLevels(data, selected, mode);
+  const quote = useMemo(
+    () => quoteLevels(useGame.getState().data, selected, mode),
+    [selected, mode, coins, gems, r.level, r.owned],
+  );
   const target = nextMilestone(r.level);
   return (
     <aside className="restaurant-panel card" aria-label={c.name}>
@@ -84,10 +87,10 @@ function SelectedRestaurant({ selected }: { selected: string }) {
           <div className="buy-modes" role="group" aria-label="Upgrade quantity">
             {(
               [
-                ['1', 'Buy1'],
-                ['10', 'Buy10'],
+                ['1', 'Buy 1'],
+                ['10', 'Buy 10'],
                 ['milestone', 'Next milestone'],
-                ['max', 'Buymax'],
+                ['max', 'Buy max'],
               ] as const
             ).map(([value, label]) => (
               <button
