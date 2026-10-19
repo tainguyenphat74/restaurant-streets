@@ -1,6 +1,10 @@
 # Restaurant Streets — Development Log
 
-## Street Honors — local implementation, awaiting parent review/publication
+## Street Honors — independently verified locally; publication pending
+
+- Parent independently reran all **115 unit tests / 18 files**, production build and diff checks after Codex stopped editing. All **ten browser suites** passed against stable production preview `http://127.0.0.1:4173`: `qa-save`, `qa`, `qa-lifecycle`, `qa-customers`, `qa-bulk`, `qa-riverside`, `qa-assets`, `qa-riverside-customers`, `qa-textures`, `qa-honors`. Zero page errors. Standard gameplay remains WebGL; repeated fixture stress remains Canvas. Production dependency audit: zero vulnerabilities. Independent read-only review found no P1/P2 blockers; parent inspected fresh mobile and explicitly labeled imported-complete desktop screenshots.
+- Continuation blocker resolved: the previous Riverside holder was waiting after its agent exited successfully and the release was documented/published. It had no child workers. Parent used its normal release signal rather than deleting the lock file or interrupting active work; acquired a new exclusive lock for this entire release. Cleanup must release the new holder before final reporting.
+- This is the first shipped-goal candidate, **not completion of all remaining work**: the steep level-100 pacing tail still needs a broader globals/boost/offline policy comparison and careful non-nerf tuning. Individual restaurant mastery and goal-discovery/mobile polish remain queued.
 
 - Bounded slice only: automatic +25% street income once every restaurant is owned and level 50+, replaced by +50% total at level 100+. Derived from current ownership/levels and earned unlocks; no claims, reward writes, persisted fields, schema/version/catalog changes, resets or grants. Individual restaurant mastery remains next.
 - `honors.ts` uses catalog data and a type-only economy import. One multiplier in normal income supplies registers, managed collection, boost integration and offline income. Existing costs, caps, gems, ratings and global formulas remain unchanged.
