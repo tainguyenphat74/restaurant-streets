@@ -913,3 +913,11 @@ nav button.active {
 .street-switch button { min-height: 44px; padding: 8px 12px; border-radius: 16px; background: white; font-weight: 700; }
 .street-switch button[aria-pressed="true"] { background: #E8553A; color: white; }
 .street-switch button:disabled { opacity: .6; }
+
+.street-honors {
+  margin-block: 1.5rem;
+}
+.street-honors .card-grid {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+  margin-top: 16px;
+}

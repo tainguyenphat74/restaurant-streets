@@ -74,6 +74,12 @@ it.each([1, 2, 3, 4])(
   'v%s high-level progress qualifies immediately and roundtrips unchanged',
   (version) => {
     const g = fixture(100);
+    g.coins = 123.25;
+    g.gems = 42;
+    g.upgrades = ['ingredients', 'service'];
+    g.boostUntil = 601000;
+    g.restaurants.noodle_nook.register = 7.125;
+    g.restaurants.noodle_nook.hasManager = true;
     g.neighborhood.unlockedStreets = ['maple_street'];
     g.restaurants.river_grill = fresh().restaurants.river_grill;
     g.restaurants.market_gelato = fresh().restaurants.market_gelato;
@@ -91,5 +97,27 @@ it.each([1, 2, 3, 4])(
     expect(parsed.coins).toBe(g.coins);
     expect(parsed.gems).toBe(g.gems);
     expect(parseSave(serialize(parsed, 1000, 123))).toEqual(parsed);
+  },
+);
+
+it('keeps UI primitive outputs stable across register, wallet and clock-only changes', () => {
+  const g = fixture(50);
+  const before = streetHonor(g, 'maple_street');
+  const ticked = accrue(g, 0, 1000).data;
+  expect(streetHonor(ticked, 'maple_street')).toEqual(before);
+  expect(Object.values(before).every((v) => typeof v !== 'object')).toBe(true);
+});
+
+it.each(neighborhoods.flatMap((s) => s.restaurants.map((r) => [s.id, r.id])))(
+  'requires ownership and target for every member of %s: %s',
+  (street, id) => {
+    const g = fixture(100);
+    g.restaurants[id].level = 99;
+    expect(streetHonor(g, street).multiplier).toBe(1.25);
+    g.restaurants[id].level = 49;
+    expect(streetHonor(g, street).multiplier).toBe(1);
+    g.restaurants[id].level = 100;
+    g.restaurants[id].owned = false;
+    expect(streetHonor(g, street).multiplier).toBe(1);
   },
 );
