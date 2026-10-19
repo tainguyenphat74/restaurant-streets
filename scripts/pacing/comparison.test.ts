@@ -28,51 +28,6 @@ it('accounts for elapsed time, expiring boosts, capacity and offline credit inde
 
 it('continues reproducible earned checkpoints with bounded policies and gem budgets', () => {
   const result = compare();
-  expect(compare()).toEqual(result);
-  expect(result.shared.seconds).toBeCloseTo(2695.05, 1);
-  for (const policy of policies) {
-    const run = result.runs[policy];
-    expect(run.checkpoints.map((c) => c.target)).toEqual([25, 50, 100]);
-    expect(run.checkpoints[0].data).toEqual(result.shared.data);
-    for (const checkpoint of run.checkpoints) {
-      expect(
-        Object.values(checkpoint.data.restaurants).every(
-          (r) => r.level === checkpoint.target,
-        ),
-      ).toBe(true);
-      expect(Number.isFinite(checkpoint.data.coins)).toBe(true);
-      expect(checkpoint.data.coins).toBeGreaterThanOrEqual(0);
-      expect(checkpoint.data.gems).toBeGreaterThanOrEqual(0);
-    }
-    expect(run.seconds).toBeCloseTo(
-      {
-        baseline: 950393.26194,
-        globals: 318594.461,
-        boosts: 309594.46009,
-        offline: 585895.14528,
-      }[policy],
-      2,
-    );
-    expect(run.seconds).toBeGreaterThan(result.shared.seconds);
-    expect(run.seconds).toBeLessThan(365 * 86400);
-    expect(run.data.gems + run.boosts * 10).toBe(160);
-    expect(run.data.coins).toBeGreaterThanOrEqual(0);
-    expect(Number.isFinite(run.data.coins)).toBe(true);
-    expect(
-      Object.values(run.data.restaurants).every((r) => r.level === 100),
-    ).toBe(true);
-    expect(run.data.upgrades.length).toBe(policy === 'baseline' ? 0 : 2);
-    if (policy === 'offline') {
-      expect(
-        Object.values(run.data.restaurants).every((r) => r.hasManager),
-      ).toBe(true);
-      expect(run.offlineSeconds).toBeGreaterThan(0);
-      expect(run.managerReadySeconds).toBeGreaterThan(result.shared.seconds);
-    } else expect(run.offlineSeconds).toBe(0);
-  }
-  expect(result.runs.baseline.boosts).toBe(0);
-  expect(result.runs.globals.boosts).toBe(0);
-  expect(result.runs.boosts.boosts).toBeGreaterThan(0);
   console.log(
     JSON.stringify(
       {
@@ -97,4 +52,67 @@ it('continues reproducible earned checkpoints with bounded policies and gem budg
       2,
     ),
   );
+  expect(compare()).toEqual(result);
+  expect(result.shared.seconds).toBeCloseTo(2695.05, 1);
+  for (const policy of policies) {
+    const run = result.runs[policy];
+    expect(run.checkpoints.map((c) => c.target)).toEqual([25, 50, 100]);
+    expect(run.checkpoints[0].data).toEqual(result.shared.data);
+    for (const checkpoint of run.checkpoints) {
+      expect(
+        Object.values(checkpoint.data.restaurants).every(
+          (r) => r.level === checkpoint.target,
+        ),
+      ).toBe(true);
+      expect(Number.isFinite(checkpoint.data.coins)).toBe(true);
+      expect(checkpoint.data.coins).toBeGreaterThanOrEqual(0);
+      expect(checkpoint.data.gems).toBeGreaterThanOrEqual(0);
+    }
+    expect(run.seconds).toBeCloseTo(
+      {
+        baseline: 674998.89686,
+        globals: 226796.33822,
+        boosts: 217796.33842,
+        offline: 423895.14528,
+      }[policy],
+      2,
+    );
+    // Early progression must remain identical; positive tuning must improve every policy.
+    expect(run.checkpoints[1].seconds).toBeCloseTo(
+      {
+        baseline: 7274.635888427734,
+        globals: 4221.584209472656,
+        boosts: 3458.321171875,
+        offline: 3458.409656982422,
+      }[policy],
+      8,
+    );
+    expect(run.seconds).toBeLessThan(
+      {
+        baseline: 950393.26194,
+        globals: 318594.461,
+        boosts: 309594.46009,
+        offline: 585895.14528,
+      }[policy],
+    );
+    expect(run.seconds).toBeGreaterThan(result.shared.seconds);
+    expect(run.seconds).toBeLessThan(365 * 86400);
+    expect(run.data.gems + run.boosts * 10).toBe(160);
+    expect(run.data.coins).toBeGreaterThanOrEqual(0);
+    expect(Number.isFinite(run.data.coins)).toBe(true);
+    expect(
+      Object.values(run.data.restaurants).every((r) => r.level === 100),
+    ).toBe(true);
+    expect(run.data.upgrades.length).toBe(policy === 'baseline' ? 0 : 2);
+    if (policy === 'offline') {
+      expect(
+        Object.values(run.data.restaurants).every((r) => r.hasManager),
+      ).toBe(true);
+      expect(run.offlineSeconds).toBeGreaterThan(0);
+      expect(run.managerReadySeconds).toBeGreaterThan(result.shared.seconds);
+    } else expect(run.offlineSeconds).toBe(0);
+  }
+  expect(result.runs.baseline.boosts).toBe(0);
+  expect(result.runs.globals.boosts).toBe(0);
+  expect(result.runs.boosts.boosts).toBeGreaterThan(0);
 }, 120000);

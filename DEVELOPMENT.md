@@ -1,5 +1,14 @@
 # Restaurant Streets — Development Log
 
+## Bounded late income tuning — local implementation, awaiting parent review
+
+- Based on clean `25ea26a` matching origin/main. Parent retains exclusive release lock; worker does not publish or touch locks/services/credentials/models.
+- One positive slice: canonical income gains 1 percentage point per level after 50, capped at +50% from 100 onward. Pure current-level derivation, once per income calculation; no fields, grants, costs, net-worth formula, level caps, schema/validator or rendering changes. All levels through 50 retain exact old income. Individual mastery remains queued.
+- Failing-first: new `late-income.test.ts` ran against unchanged runtime: **12 failed / 4 passed** (51: 510 vs 515.1; 100: 2000 vs 3000; stacked: 9000 vs 13500; old-save rates: 8000 vs 12000). Initial run also caught a mistaken level-49 expectation (490); corrected to historical 245 and reran before implementation. After the single multiplier, all 16 pass. Covers every valid level/cuisine for nonnegative bounded finite behavior, independent boundary numbers, real purchase/cost/net-worth preservation, registers/managers/partial boost/offline cap and exact v1-v4 saved-field preservation.
+- Reproduced all four pre-change policy runs before editing; unchanged simulator now reports both-100 cumulative seconds **674,998.89686 / 226,796.33822 / 217,796.33842 / 423,895.14528** (baseline/globals/boosts/offline), versus **950,393.26194 / 318,594.46100 / 309,594.46009 / 585,895.14528**. Every both-50 checkpoint unchanged. Exact old timing test failed as expected, then updated to measured results and supplemented with unchanged-50/improvement assertions. Full assumptions, before/after times and limitations: `scripts/pacing/README.md`.
+- First full suite exposed the existing level-100 milestone income expectation; updated only that genuinely affected value, retaining exact assertions. **133 tests / 20 files passed**, production build passed (existing bundle warning), diff check passed. Frozen validators/protection unchanged. Browser/UI handoff evidence follows after the final stable build.
+
+
 ## Late-game policy planning — live
 
 - Published runtime source **`4ca954159705822aae45b37d6f06487ee6bb89f0`** via normal fast-forward push to `main`. Exact-SHA Git preview **`dpl_FNdFxFLPiJPh5MeDwFX6ooLDjc9r`** was promoted once; production rebuild **`dpl_8N5NSSYqcPJXGDdkKXD4RixKLKPH`**, https://restaurant-streets-18v8i2m4z-nguyentai2760gmailcoms-projects.vercel.app, is Ready / production with the exact source SHA. Alias listing confirms the custom domain points to that deployment.

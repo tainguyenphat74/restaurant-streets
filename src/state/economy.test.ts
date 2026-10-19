@@ -16,7 +16,7 @@ describe('economy', () => {
     expect(upgradeCost('noodle_nook', 1)).toBe(11.5);
     expect(upgradeCost('coffee_corner', 2)).toBeCloseTo(132.25);
   });
-  it('applies every milestone and rating', () => {
+  it('applies every milestone, rating and bounded late scaling', () => {
     for (const [level, mult] of [
       [1, 1],
       [10, 2],
@@ -27,7 +27,7 @@ describe('economy', () => {
       const g = fresh();
       g.restaurants.noodle_nook.level = level;
       expect(income(g, 'noodle_nook', 0)).toBe(
-        (level * mult * rating(level)) / 4,
+        ((level * mult * rating(level)) / 4) * (level === 100 ? 1.5 : 1),
       );
     }
   });

@@ -62,7 +62,9 @@ export function income(g: GameData, id: string, now: number) {
         globalMultiplier(g) *
         (rating(r.level) / 4) *
         (g.boostUntil > now ? 2 : 1) *
-        honorMultiplier(g, id)
+        honorMultiplier(g, id) *
+        // Continuous +1 percentage point per level after 50, capped at +50%.
+        (1 + Math.min(50, Math.max(0, r.level - 50)) / 100)
     : 0;
 }
 export const totalIncome = (g: GameData, now: number) =>

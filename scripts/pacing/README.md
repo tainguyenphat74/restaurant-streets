@@ -47,3 +47,30 @@ accrual is run over those offline intervals. Small independent expectations cove
 9-hour absence. Loop bounds, finite balances, earned gem accounting, deterministic
 repeatability and checkpoint continuity are tested. This comparison does not test
 human schedules, optimal boost timing, save lifecycle or proposed balance changes.
+
+## Bounded late income tuning (local release, 2026-10-19)
+
+The table above records the pre-tuning run on `25ea26a`, reproduced before edits.
+Canonical restaurant income now multiplies by `1 + clamp(level - 50, 0, 50) / 100`:
+unchanged through 50, +1% at 51, +25% at 75, +50% at 100 and thereafter.
+This continuous bounded ramp avoids a new threshold reward or runaway scaling;
+it composes once with existing milestones, honors, globals and boosts. Costs,
+net worth, level cap, rewards, registers and save schemas are unchanged.
+
+The same simulator and policies (no algorithm changes) produced:
+
+| Policy                                   | Both 50, cumulative seconds (unchanged) | Both 100 before | Both 100 after | Reduction |
+| ---------------------------------------- | --------------------------------------: | --------------: | -------------: | --------: |
+| No globals / no boosts, active           |                             7,274.63589 |   950,393.26194 |  674,998.89686 |    28.98% |
+| Globals, active                          |                             4,221.58421 |   318,594.46100 |  226,796.33822 |    28.81% |
+| Globals + earned boosts, active          |                             3,458.32117 |   309,594.46009 |  217,796.33842 |    29.65% |
+| Globals + earned boosts, bounded offline |                             3,458.40966 |   585,895.14528 |  423,895.14528 |    27.65% |
+
+Shared both-25 time remains exactly 2,695.0581635742187s. Boost counts and gem
+balances remain 0/160, 0/160, 15/10, 15/10 respectively. Offline manager readiness
+remains 2,695.1452841796877s; total offline time drops from 518,400 to 374,400s.
+The offline result remains schedule-sensitive and includes whole eight-hour
+intervals. These are simulated elapsed seconds, not benchmark runtime or human
+play measurements. Even after tuning, baseline is 7.81 days and the earned-boost
+branch is 2.52 days of optimistic play: this is one improvement, not a claim that
+late balance is finished. Individual mastery remains queued.
