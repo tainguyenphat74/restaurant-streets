@@ -33,7 +33,10 @@ try {
     };
     const kitchen = () =>
       page.getByRole('button', { name: 'Kitchen', exact: true }).click();
-    const goal = page.getByRole('region', { name: 'Riverside Market' });
+    const goal = page.getByRole('region', {
+      name: 'Riverside Market',
+      exact: true,
+    });
     const row = (name) => goal.locator('li').filter({ hasText: name });
     const ready = () =>
       page.waitForFunction(() => window.restaurantQA?.().scene.ready);
@@ -172,16 +175,14 @@ try {
     expansion.coins = 1e12;
     // Normal import funds purchases without pretending these are natural earnings.
     await page.getByRole('button', { name: 'Settings', exact: true }).click();
-    await page
-      .getByLabel('Import a saved street')
-      .fill(
-        JSON.stringify({
-          ...expansion,
-          version: 4,
-          savedAt: Date.now(),
-          pendingOffline: 123.25,
-        }),
-      );
+    await page.getByLabel('Import a saved street').fill(
+      JSON.stringify({
+        ...expansion,
+        version: 4,
+        savedAt: Date.now(),
+        pendingOffline: 123.25,
+      }),
+    );
     await page.getByRole('button', { name: 'Restore save' }).click();
     await expect(
       page.getByText('Street restored.', { exact: true }),
