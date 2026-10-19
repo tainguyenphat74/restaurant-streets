@@ -10,6 +10,8 @@ import {
   managerCost,
   hire,
 } from './economy';
+import { streetHonor } from './honors';
+import { neighborhoods } from '../data/neighborhoods';
 import { restaurants } from '../data/restaurants';
 import { riversideGoalIds, unlockRiverside } from './riverside';
 
@@ -91,15 +93,54 @@ it('simulates bounded active pacing through the earned goal and Riverside openin
   expect(goalSeconds).toBeLessThan(60 * 60);
   expect(elapsed - goalSeconds).toBeGreaterThan(5 * 60);
   expect(elapsed - goalSeconds).toBeLessThan(60 * 60);
+  const bothRiverside25 = elapsed - goalSeconds;
+  const checkpoints: Record<string, number> = {};
+  // Continue the same earned fresh run: all streets 25 -> 50 -> 100.
+  // Greedy marginal TOTAL income includes the street-wide final-level benefit.
+  // No speculative spending above the current target; no free funds or time skips.
+  for (const target of [50, 100]) {
+    const start = elapsed;
+    while (restaurants.some((c) => g.restaurants[c.id].level < target)) {
+      const options = restaurants
+        .filter((c) => g.restaurants[c.id].level < target)
+        .map((c) => {
+          const cost = upgradeCost(c.id, g.restaurants[c.id].level);
+          const next = levelUp({ ...g, coins: cost }, c.id);
+          return {
+            id: c.id,
+            cost,
+            ratio: cost / (totalIncome(next, 0) - totalIncome(g, 0)),
+          };
+        })
+        .sort((a, b) => a.ratio - b.ratio);
+      afford(options[0].cost);
+      g = levelUp(g, options[0].id);
+      for (const street of neighborhoods) {
+        const key = `${street.id}-${target}`;
+        if (
+          !checkpoints[key] &&
+          streetHonor(g, street.id).multiplier === (target === 50 ? 1.25 : 1.5)
+        )
+          checkpoints[key] = elapsed;
+      }
+    }
+    expect(elapsed).toBeGreaterThan(start);
+    expect(elapsed - start).toBeLessThan(365 * 24 * 3600);
+    for (const street of neighborhoods)
+      expect(streetHonor(g, street.id).multiplier).toBe(
+        target === 50 ? 1.25 : 1.5,
+      );
+  }
   console.log(
     JSON.stringify({
       model:
         'active, <=60s collections, lowest marginal payback to Maple 25; then River Grill + manager, Gelato + manager',
+      checkpoints,
       goalSeconds,
       goalRate,
       openings,
       bothManagedSecondsAfterGoal,
-      bothRiverside25SecondsAfterGoal: elapsed - goalSeconds,
+      bothRiverside25SecondsAfterGoal: bothRiverside25,
     }),
   );
 });
