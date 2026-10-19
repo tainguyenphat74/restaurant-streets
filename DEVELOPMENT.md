@@ -1,5 +1,14 @@
 # Restaurant Streets — Development Log
 
+## Late-game policy planning — local only, not published
+
+- Bounded evidence/guidance slice based on clean `6eb4188`; parent retains the exclusive release lock throughout. No push or deploy by this worker. No economy, catalog, schema, cap, reward or balance changes.
+- Simulator lives in `scripts/pacing/` outside runtime imports. Old baseline `src/state/pacing.test.ts` retained unchanged. Tests first failed on missing `./simulation`; after implementation **117 tests / 19 files** passed, production build and diff check passed; standalone strict TypeScript check of simulator/tests also passed. Existing bundle-size warning remains.
+- Reproduce: `npm test -- scripts/pacing/comparison.test.ts --silent=false`. Shared truly earned fresh checkpoint: both streets 25 at **2,695.05816s**. Continued both-50 / both-100 cumulative seconds: baseline **7,274.63589 / 950,393.26194**; globals **4,221.58421 / 318,594.46100**; globals + earned boosts **3,458.32117 / 309,594.46009**; same with bounded offline schedule **3,458.40966 / 585,895.14528**. Boost policies spend 150 of 160 earned gems on 15 boosts; 10 remain.
+- Shared fresh policy and all assumptions are in `scripts/pacing/README.md`: greedy marginal-income purchases, zero human latency, <=60s active collection (<=30s while boosted), real advancing timestamps. Globals deliberately start only after both streets 25. Offline branch hires every manager from earned coins by **2,695.14528s**, then alternates one active hour/eight offline hours; **518,400s** offline total. Rewards credited once per disjoint interval via production `offlineIncome`, not UI save claiming. All checkpoints retain actual earned state; hypothetical ranking copies never become real state.
+- Independent small-number tests cover fresh rate, boost expiry, unmanaged cap, manager-only offline rate/cap and successive intervals. Deterministic repeats, convergence bounds, nonnegative finite balances, checkpoint continuity and gem budgets pass. These are model outputs, not player metrics, optimality claims or evidence that balance is complete. Next queue remains careful non-nerf tuning informed by these comparisons, then mastery and discovery/mobile polish.
+
+
 ## Street Honors — live
 
 - Published runtime source: **`684cdc60bd2c5d2da203c977f89c565a5d638a47`**, normal fast-forward push to main. Exact-SHA Git preview `dpl_Av8NFYhEpRSB7BZo1jVhGYpmtWqN` was promoted once; production rebuild **`dpl_9A3T5QLgiEFLCN5EHHWdRSS7ZMYx`**, https://restaurant-streets-dtx6g59zq-nguyentai2760gmailcoms-projects.vercel.app, is Ready / production with that SHA and the custom-domain alias.
@@ -75,7 +84,8 @@ Split large items into smaller tested releases. A data foundation is not a playa
 
 ## Current activity and automation
 
-- Street Honors and playable Riverside are published and independently live-verified. Next bounded work: compare the steep level-100 tail under global-upgrade/boost/offline policies before careful non-nerf tuning; individual restaurant mastery remains queued, followed by goal discovery/mobile polish. Do not repeat shipped honors or Riverside work. The stale completed Riverside release holder was resolved, so the enabled two-hour continuation can acquire the lock normally after this release cleanup.
+- Local policy comparison is now implemented and tested (not published); Kitchen guidance/browser work follows in this same bounded slice. Parent owns the release lock; this worker must not touch it.
+- Street Honors and playable Riverside are published and independently live-verified. Prior next bounded work: compare the steep level-100 tail under global-upgrade/boost/offline policies before careful non-nerf tuning; individual restaurant mastery remains queued, followed by goal discovery/mobile polish. Do not repeat shipped honors or Riverside work. The stale completed Riverside release holder was resolved, so the enabled two-hour continuation can acquire the lock normally after this release cleanup.
 - Autonomous continuation is configured every two hours with local delivery; progress belongs here rather than frequent chat messages.
 - The first two scheduled runs were blocked before execution by provider quota (429); they made no game changes. Codex CLI separately hit its usage limit during the performance correction, which was completed directly. A configured schedule does not prove a run succeeded. Resume from this file on the next healthy run.
 
