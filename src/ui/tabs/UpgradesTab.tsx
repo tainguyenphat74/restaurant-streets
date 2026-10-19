@@ -18,7 +18,7 @@ export function UpgradesTab() {
     <div className="page">
       <span className="eyebrow">SMALL CHANGES, BIG POSSIBILITIES</span>
       <h1>A little extra magic</h1>
-      <p>Give every restaurant on your street a helping hand.</p>
+      <p>Give every restaurant on both streets a helping hand.</p>
       <div className="card-grid">
         {upgrades.map((u) => (
           <Card key={u.id}>

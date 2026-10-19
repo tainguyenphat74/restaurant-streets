@@ -8,11 +8,28 @@ import { format } from '../../utils/format';
 import { Card } from '../components/Card';
 import { Button } from '../components/Button';
 export function KitchenTab() {
+  const setTab = useGame((s) => s.setTab);
   return (
     <div className="page">
       <span className="eyebrow">BEHIND THE COUNTER</span>
       <h1>Your kitchens</h1>
       <p>A happy team keeps the good food coming.</p>
+      <section className="card" aria-labelledby="progression-help-title">
+        <h2 id="progression-help-title">Plan your progress</h2>
+        <p>
+          Collect often: unmanaged registers hold only 60 seconds of income.
+          Hire managers below for automatic collection; only managed restaurants
+          earn 50% income offline, capped at 8 hours per absence.
+        </p>
+        <p>
+          Global upgrades apply to both streets. Rush hour doubles all income
+          for 10 minutes and costs 10 gems. Earn 5 gems at restaurant levels 10,
+          25, 50 and 100.
+        </p>
+        <Button onClick={() => setTab('Upgrades')}>
+          Open upgrades and boosts
+        </Button>
+      </section>
       <StreetHonors />
       <RiversideGoal />
       <div className="card-grid">
