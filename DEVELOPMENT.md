@@ -1,6 +1,11 @@
 # Restaurant Streets — Development Log
 
-## Late-game policy planning — independently verified, publication pending
+## Late-game policy planning — live
+
+- Published runtime source **`4ca954159705822aae45b37d6f06487ee6bb89f0`** via normal fast-forward push to `main`. Exact-SHA Git preview **`dpl_FNdFxFLPiJPh5MeDwFX6ooLDjc9r`** was promoted once; production rebuild **`dpl_8N5NSSYqcPJXGDdkKXD4RixKLKPH`**, https://restaurant-streets-18v8i2m4z-nguyentai2760gmailcoms-projects.vercel.app, is Ready / production with the exact source SHA. Alias listing confirms the custom domain points to that deployment.
+- Public https://restaurant-streets.tainguyenphat.com/ returned unauthenticated HTTPS **200**. Live `/assets/index-Bl_0zluc.js` contains `Plan your progress` and exactly matches the tested local artifact: SHA-256 `f96d7d4a095ec5a1d1cf02f422904d8ed30bcf378a784331e98fa2808a239c02`.
+- **Five live suites passed** on the actual custom domain: `qa-progression`, `qa-save`, `qa`, `qa-bulk`, `qa-lifecycle` (all `.mjs`), zero page errors. Includes desktop keyboard/mobile taps through guidance to real global/boost purchases, exact costs/duration, unchanged schema/progress, save/export/reload; v1-v4 migration/protected recovery; fresh earning/collection/upgrades/managers, offline claim idempotency, bulk, touch gestures and teardown. Supported imported fixtures are not natural player progress.
+- Final evidence update is docs-only: no extra promotion required. No credential, protection, DNS, model or service changes; no duplicate production builds. Only this one bounded release was developed.
 
 - Parent release gates after Codex exited: **117 tests / 19 files passed**, production build passed, standalone strict simulator typecheck, Prettier and `git diff --check` passed. Production dependency audit: zero vulnerabilities. Existing bundle-size warning remains.
 - All **eleven browser suites passed** against the stable production build at `http://127.0.0.1:4173`: `qa-progression`, `qa`, `qa-lifecycle`, `qa-customers`, `qa-bulk`, `qa-save`, `qa-honors`, `qa-riverside`, `qa-assets`, `qa-riverside-customers`, `qa-textures` (all `.mjs`). Zero page errors. Standard gameplay is WebGL; repeated fixture stress is Canvas. Fresh desktop/mobile Kitchen screenshots were independently inspected: legible guidance/CTA, no clipping or overlap. Advanced imports remain QA fixtures, not natural progress.
@@ -84,7 +89,7 @@ Scope: this repository and its existing Vercel project only. Preserve player sav
 | Bulk upgrades and clear milestone progress | **Live** | Buy 1 / Buy 10 / Next milestone / Buy max; partial affordable quantities quoted honestly; exact sequential costs/gems; cap enforced; unchanged old saves; mobile controls. |
 | Riverside Market — safe data/save foundation | **Live** | Separate neighborhood definitions and versioned migration preserving existing coins, gems, restaurant levels/managers/registers, boosts and pending offline rewards; strict invalid-save handling. Incomplete features stay inactive. |
 | Riverside Market — playable expansion | **Live** | Strict historical migration to v4; earned six-Maple-level-25 unlock; two Riverside restaurants and street switching; both streets' income/purchases/managers/offline/collection/bulk flows; customer depth, teardown, touch and simulation-tested pacing. |
-| Late-game milestones and balance | **Street Honors live; policy comparison/guidance local only; tuning queued** | Simulate fresh/mid/late progression; add achievable goals beyond current rewards without nerfing earned progress or merely raising caps. |
+| Late-game milestones and balance | **Street Honors, policy comparisons and planning guidance live; non-nerf tuning queued** | Simulate fresh/mid/late progression; add achievable goals beyond current rewards without nerfing earned progress or merely raising caps. |
 | Restaurant mastery | Queued | Short permanent achievement tracks, idempotent rewards, visible cosmetic/perk unlocks; valid old saves survive; no forced reset or daily-streak penalty. |
 | Expansion and mastery polish | Queued | Discoverable goals, completion state, accessibility, mobile usability, performance and regression coverage. |
 
@@ -92,8 +97,8 @@ Split large items into smaller tested releases. A data foundation is not a playa
 
 ## Current activity and automation
 
-- Local late-game policy comparison and Kitchen guidance are implemented; parent independent verification/publication is next. This worker has not pushed or deployed and must not touch the parent's exclusive release lock.
-- Street Honors, bulk and playable Riverside are already published. This slice supplies current-policy evidence before careful non-nerf tuning, not balance completion. Next development queue: review the remaining level-100 tail using these disclosed policies, then individual restaurant mastery and discovery/mobile polish. Do not repeat shipped work.
+- Late-game policy comparison and Kitchen planning guidance are now live and independently verified (source/deployment and full evidence above). One release only; coding worker, verification workers and preview are stopped during final cleanup, then the owned release holder is signaled normally. The shared lock file is retained.
+- Street Honors, bulk and playable Riverside remain published. Policy comparison is complete, not balance tuning: remaining level-100 pacing needs a small non-nerf proposal tested against all four disclosed policies before changing income/costs. Then individual restaurant mastery and further discovery/mobile polish remain queued. Do not repeat shipped work.
 - Autonomous continuation is configured every two hours with local delivery; progress belongs here rather than frequent chat messages.
 - The first two scheduled runs were blocked before execution by provider quota (429); they made no game changes. Codex CLI separately hit its usage limit during the performance correction, which was completed directly. A configured schedule does not prove a run succeeded. Resume from this file on the next healthy run.
 
