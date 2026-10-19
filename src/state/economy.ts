@@ -1,3 +1,4 @@
+import { honorMultiplier } from './honors';
 import { restaurantAvailable } from './riverside';
 import { config, restaurants } from '../data/restaurants';
 import { upgrades } from '../data/upgrades';
@@ -60,7 +61,8 @@ export function income(g: GameData, id: string, now: number) {
         2 ** milestones.filter((m) => r.level >= m).length *
         globalMultiplier(g) *
         (rating(r.level) / 4) *
-        (g.boostUntil > now ? 2 : 1)
+        (g.boostUntil > now ? 2 : 1) *
+        honorMultiplier(g, id)
     : 0;
 }
 export const totalIncome = (g: GameData, now: number) =>
