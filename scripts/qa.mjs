@@ -102,6 +102,10 @@ expect((await snap(page)).data.restaurants.noodle_nook.register).toBe(0);
 await page.close();
 await new Promise((r) => setTimeout(r, 2000));
 const reload = await context.newPage();
+// Keep wall time constant across the claim and second navigation: real network
+// latency is a NEW legitimate offline interval, not a duplicated reward.
+// Timers/animation continue so this still covers normal WebGL scene startup.
+await reload.clock.setFixedTime(new Date());
 await reload.goto(`${process.env.QA_URL || 'http://localhost:5173'}/?qa=1`, {
   waitUntil: 'domcontentloaded',
 });
@@ -113,9 +117,10 @@ await reload
   .click();
 await reload.waitForFunction(() => window.restaurantQA?.().scene.ready);
 expect((await snap(reload)).pending).toBe(0);
+await reload.waitForTimeout(1500);
 await reload.reload({ waitUntil: 'domcontentloaded' });
 await reload.waitForFunction(() => window.restaurantQA?.().scene.ready);
-expect((await snap(reload)).pending).toBeLessThan(1);
+expect((await snap(reload)).pending).toBe(0);
 console.log('Offline and reload passed');
 await context.close();
 const { page: mobile, context: mc } = await fresh(390, 844, true);
