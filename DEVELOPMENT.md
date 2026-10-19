@@ -1,6 +1,10 @@
 # Restaurant Streets — Development Log
 
-## Bounded late income tuning — local implementation, awaiting parent review
+## Bounded late income tuning — independently verified locally; publication pending
+
+- Parent resumed the two existing intended commits without discarding/reimplementing them. A fresh exclusive release lock covers verification, publication and evidence. Independent read-only review found no P1/P2 blockers.
+- Parent independently reran **133 tests / 20 files**, all four pacing policies, production build, diff checks and production dependency audit (zero vulnerabilities). **All twelve browser suites passed** on the final stable production artifact: `qa-late-income`, `qa-save`, `qa-progression`, `qa-honors`, `qa-bulk`, `qa-riverside`, `qa`, `qa-lifecycle`, `qa-customers`, `qa-assets`, `qa-riverside-customers`, `qa-textures`, desktop/mobile, zero page errors. WebGL standard gameplay and Canvas fixture stress remain explicitly distinct. Mobile imported-fixture screenshot was visually inspected; no clipping/overlap.
+- Port 4173 was free after the interrupted handoff; the parent started a run-owned Vite production preview, verified its PID and HTTP200, and compared the served JS byte-for-byte with final `dist/assets/index-CynhJewH.js`. That preview is this run's cleanup responsibility, not an earlier server to leave behind. No HMR/browser tests while edits were occurring.
 
 - Based on clean `25ea26a` matching origin/main. Parent retains exclusive release lock; worker does not publish or touch locks/services/credentials/models.
 - One positive slice: canonical income gains 1 percentage point per level after 50, capped at +50% from 100 onward. Pure current-level derivation, once per income calculation; no fields, grants, costs, net-worth formula, level caps, schema/validator or rendering changes. All levels through 50 retain exact old income. Individual mastery remains queued.
