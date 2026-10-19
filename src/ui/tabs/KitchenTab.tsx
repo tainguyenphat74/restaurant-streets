@@ -26,6 +26,11 @@ export function KitchenTab() {
           for 10 minutes and costs 10 gems. Earn 5 gems at restaurant levels 10,
           25, 50 and 100.
         </p>
+        <p>
+          Each restaurant gains an extra 1 percentage point per level after 50,
+          capped at +50% at level 100 and beyond. This multiplies with
+          milestones, Street Honors, global upgrades and rush hour.
+        </p>
         <Button onClick={() => setTab('Upgrades')}>
           Open upgrades and boosts
         </Button>
