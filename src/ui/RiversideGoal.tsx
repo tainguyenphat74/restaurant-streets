@@ -18,7 +18,9 @@ export function RiversideGoal() {
   return (
     <Card aria-labelledby="riverside-title" className="riverside-goal">
       <span className="eyebrow">YOUR NEXT NEIGHBORHOOD GOAL</span>
-      <h2 id="riverside-title">Riverside Market</h2>
+      <h2 id="riverside-title" tabIndex={-1}>
+        Riverside Market
+      </h2>
       <p>
         Own all six Maple Street restaurants at level {riversideTarget} or
         higher.

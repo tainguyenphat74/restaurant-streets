@@ -1,3 +1,4 @@
+import { KitchenMastery } from '../KitchenMastery';
 import { StreetHonors } from '../StreetHonors';
 import { RiversideGoal } from '../RiversideGoal';
 import { useShallow } from 'zustand/react/shallow';
@@ -10,10 +11,11 @@ import { Button } from '../components/Button';
 export function KitchenTab() {
   const setTab = useGame((s) => s.setTab);
   return (
-    <div className="page">
+    <div className="page kitchen-page">
       <span className="eyebrow">BEHIND THE COUNTER</span>
       <h1>Your kitchens</h1>
       <p>A happy team keeps the good food coming.</p>
+      <KitchenMastery />
       <section className="card" aria-labelledby="progression-help-title">
         <h2 id="progression-help-title">Plan your progress</h2>
         <p>
