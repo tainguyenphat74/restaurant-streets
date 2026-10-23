@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { RestaurantMastery } from './RestaurantMastery';
 import { quoteLevels, nextMilestone, type BuyMode } from '../state/bulk';
 import { useShallow } from 'zustand/react/shallow';
@@ -17,6 +17,15 @@ export function RestaurantPanel() {
   ) : null;
 }
 function SelectedRestaurant({ selected }: { selected: string }) {
+  const heading = useRef<HTMLHeadingElement>(null);
+  const opener = useRef<HTMLElement | null>(null);
+  useEffect(() => {
+    opener.current =
+      document.activeElement instanceof HTMLElement
+        ? document.activeElement
+        : null;
+    heading.current?.focus();
+  }, []);
   const [mode, setMode] = useState<BuyMode>('1');
   const { select, coins, gems, r, act, bulkUpgrade, revenue, rate } = useGame(
     useShallow((s) => ({
@@ -39,15 +48,33 @@ function SelectedRestaurant({ selected }: { selected: string }) {
     [selected, mode, coins, gems, r.level, r.owned],
   );
   const target = nextMilestone(r.level);
+  const close = () => {
+    select(null);
+    // Prefer the live plot, then the still-mounted Kitchen opener. A newly
+    // mounted scene may not have projected labels yet: its street control is
+    // an immediate fallback, with no delayed focus that could steal navigation.
+    const plot = document.getElementById(`restaurant-plot-${selected}`);
+    const source = opener.current;
+    const street = document.querySelector<HTMLElement>(
+      '.street-switch button[aria-pressed="true"]',
+    );
+    (
+      plot ??
+      (source?.isConnected && source !== document.body ? source : street)
+    )?.focus();
+  };
   return (
-    <aside className="restaurant-panel card" aria-label={c.name}>
-      <button
-        className="close icon-button"
-        aria-label="Close restaurant"
-        onClick={() => select(null)}
-      >
-        ×
-      </button>
+    <aside
+      className="restaurant-panel card"
+      aria-label={c.name}
+      onKeyDown={(event) => {
+        if (event.key === 'Escape') {
+          event.preventDefault();
+          event.stopPropagation();
+          close();
+        }
+      }}
+    >
       <div className="preview" style={{ background: c.color + '22' }}>
         {previews[selected] ? (
           <img
@@ -62,9 +89,16 @@ function SelectedRestaurant({ selected }: { selected: string }) {
           <span>{c.emoji}</span>
         )}
       </div>
-      <h2>
+      <h2 ref={heading} tabIndex={-1}>
         {c.name} <small>· Lv {r.level}</small>
       </h2>
+      <button
+        className="close icon-button"
+        aria-label="Close restaurant"
+        onClick={close}
+      >
+        ×
+      </button>
       <div className="stars">
         ★★★★★{' '}
         <span>

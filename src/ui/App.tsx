@@ -14,10 +14,9 @@ import { Modal } from './components/Modal';
 import { Toasts } from './components/Toasts';
 import { Button } from './components/Button';
 export function App() {
-  const { tab, select, pending, storageError, saveProtected } = useGame(
+  const { tab, pending, storageError, saveProtected } = useGame(
     useShallow((s) => ({
       tab: s.tab,
-      select: s.select,
       pending: s.pending,
       storageError: s.storageError,
       saveProtected: s.saveProtected,
@@ -29,13 +28,12 @@ export function App() {
   useEffect(() => {
     const fn = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
-        select(null);
         setSettings(false);
       }
     };
     window.addEventListener('keydown', fn);
     return () => window.removeEventListener('keydown', fn);
-  }, [select]);
+  }, []);
   return (
     <>
       <TopBar settings={() => setSettings(true)} />

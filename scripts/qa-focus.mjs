@@ -67,6 +67,27 @@ try {
       return save;
     }
     const original = await exported();
+    // Existing Kitchen cards open a nonmodal panel without mounting a map.
+    await activate(button('Kitchen'));
+    const kitchenVisit = button('Visit restaurant ↗').first();
+    await activate(kitchenVisit);
+    await expect(heading('Noodle Nook')).toBeFocused();
+    await page.keyboard.press('Escape');
+    await expect(kitchenVisit).toBeFocused();
+    expect(await exported()).toEqual(original);
+    // Dismiss before Phaser has received frames to project map controls.
+    await activate(
+      page
+        .getByRole('region', { name: 'Kitchen mastery', exact: true })
+        .getByRole('button', { name: 'Visit Noodle Nook', exact: true }),
+    );
+    await expect(heading('Noodle Nook')).toBeFocused();
+    expect(await plot('Noodle Nook').count()).toBe(0);
+    await page.keyboard.press('Escape');
+    await expect(button('Maple Street')).toBeFocused();
+    await frames();
+    await expect(button('Maple Street')).toBeFocused();
+    expect(await exported()).toEqual(original);
     async function visit(name) {
       await activate(button('Kitchen'));
       const overview = page.getByRole('region', {
@@ -147,6 +168,11 @@ try {
     await activate(button('Close restaurant'));
     await expect(plot('Noodle Nook')).toBeFocused();
     for (const name of ['Noodle Nook', 'Coffee Corner', 'Noodle Nook']) {
+      // On mobile the existing bottom sheet covers some map plots; dismiss it
+      // with a real tap before selecting the next one (never force through it).
+      if (mobile && (await button('Close restaurant').count())) {
+        await activate(button('Close restaurant'));
+      }
       await activate(plot(name));
       await expect(heading(name)).toBeFocused();
     }
@@ -165,6 +191,7 @@ try {
     expected.neighborhood.currentStreet = 'riverside_market';
     expect(await exported()).toEqual(expected);
     await activate(plot('River Grill'));
+    if (mobile) await activate(button('Close restaurant'));
     await activate(button('Maple Street'));
     await frames();
     await expect(panel('River Grill')).toHaveCount(0);
@@ -174,6 +201,9 @@ try {
     await frames();
     expect(await exported()).toEqual(fixture);
     await visit('Noodle Nook');
+    await page.screenshot({
+      path: `test-results/focus-${mobile ? 'mobile' : 'desktop'}-imported-fixture.png`,
+    });
     await activate(button('Close restaurant'));
     await expect(plot('Noodle Nook')).toBeFocused();
     expect(errors).toEqual([]);

@@ -1,5 +1,5 @@
 import { useShallow } from 'zustand/react/shallow';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { createGame } from '../../game/PhaserGame';
 import { useGame } from '../../state/store';
 import { neighborhoods } from '../../data/neighborhoods';
@@ -9,9 +9,23 @@ import { format } from '../../utils/format';
 import type { StreetScene } from '../../game/scenes/StreetScene';
 export function StreetTab() {
   const street = useGame((s) => s.data.neighborhood.currentStreet);
-  return <StreetView key={street} />;
+  const requested = useRef<string | null>(null);
+  useLayoutEffect(() => {
+    if (requested.current === street) {
+      document.getElementById(`street-switch-${street}`)?.focus();
+    }
+    requested.current = null;
+  }, [street]);
+  return (
+    <StreetView
+      key={street}
+      onSwitch={(id) => {
+        requested.current = id;
+      }}
+    />
+  );
 }
-function StreetView() {
+function StreetView({ onSwitch }: { onSwitch: (id: string) => void }) {
   const street = useGame((s) => s.data.neighborhood.currentStreet);
   const unlocked = useGame((s) =>
     s.data.neighborhood.unlockedStreets.includes('riverside_market'),
@@ -61,9 +75,13 @@ function StreetView() {
           {neighborhoods.map((n) => (
             <button
               key={n.id}
+              id={`street-switch-${n.id}`}
               aria-pressed={street === n.id}
               disabled={n.id === 'riverside_market' && !unlocked}
-              onClick={() => switchStreet(n.id)}
+              onClick={() => {
+                onSwitch(n.id);
+                switchStreet(n.id);
+              }}
             >
               {n.name}
               {n.id === 'riverside_market' && !unlocked ? ' · Locked' : ''}
@@ -150,7 +168,14 @@ function PlotLabel({
       style={{ left: position.x, top: position.y }}
     >
       {selected && <span className="selection-pin">▼</span>}
-      <button className="building-label" onClick={() => select(id)}>
+      <button
+        id={`restaurant-plot-${id}`}
+        className="building-label"
+        aria-label={
+          owned ? undefined : `For Sale · 🪙 ${format(c.baseCost)} · ${c.name}`
+        }
+        onClick={() => select(id)}
+      >
         {owned ? c.name : 'For Sale'}
         <small>
           {owned ? `Lv ${level} · ${c.emoji}` : `🪙 ${format(c.baseCost)}`}

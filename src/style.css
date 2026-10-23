@@ -33,6 +33,10 @@ textarea:focus-visible {
   outline: 3px solid #65a8aa;
   outline-offset: 4px;
 }
+.restaurant-panel h2:focus {
+  outline: 3px solid #65a8aa;
+  outline-offset: 4px;
+}
 h1,
 h2,
 h3,
