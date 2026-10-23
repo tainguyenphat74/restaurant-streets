@@ -1,3 +1,4 @@
+import { masterIncomeMultiplier } from './master-perk';
 import { honorMultiplier } from './honors';
 import { restaurantAvailable } from './riverside';
 import { config, restaurants } from '../data/restaurants';
@@ -64,7 +65,8 @@ export function income(g: GameData, id: string, now: number) {
         (g.boostUntil > now ? 2 : 1) *
         honorMultiplier(g, id) *
         // Continuous +1 percentage point per level after 50, capped at +50%.
-        (1 + Math.min(50, Math.max(0, r.level - 50)) / 100)
+        (1 + Math.min(50, Math.max(0, r.level - 50)) / 100) *
+        masterIncomeMultiplier(r.owned, r.level)
     : 0;
 }
 export const totalIncome = (g: GameData, now: number) =>

@@ -20,9 +20,9 @@ it.each([
   [51, 515.1],
   [75, 937.5],
   [99, 1475.1],
-  [100, 3000],
-  [101, 3030],
-  [1000, 30000],
+  [100, 3300],
+  [101, 3333],
+  [1000, 33000],
 ])('has independent Noodle income at level %s', (level, expected) => {
   const g = fresh();
   g.restaurants.noodle_nook.level = level;
@@ -59,7 +59,12 @@ it('preserves every early level and is finite and bounded for every restaurant t
       const rate = income(g, c.id, 0);
       expect(Number.isFinite(rate)).toBe(true);
       expect(rate).toBeGreaterThanOrEqual(old);
-      expect(rate).toBeLessThanOrEqual(old * 1.5);
+      expect(rate).toBeLessThanOrEqual(old * 1.5 * (level >= 100 ? 1.1 : 1));
+      expect(rate).toBe(
+        old *
+          (1 + Math.min(50, Math.max(0, level - 50)) / 100) *
+          (level >= 100 ? 1.1 : 1),
+      );
       if (level <= 50) expect(rate).toBe(old);
     }
     g.restaurants[c.id].owned = false;
@@ -73,22 +78,23 @@ it('composes once with globals, honors, registers, managers, partial boosts and 
       Object.assign(r, { owned: true, level: 100 });
   }
   g.upgrades = ['ingredients', 'service'];
-  // 1 * 100 * 16 * 1.25 rating * 1.5 late * 1.5 honor * 3 globals = 13,500/s.
-  expect(income(g, 'noodle_nook', 0)).toBe(13500);
+  // Existing 13,500/s stacks with the separate 1.1 Master multiplier.
+  const rate = 13500 * 1.1;
+  expect(income(g, 'noodle_nook', 0)).toBe(rate);
   const tick = accrue(g, 0, 2000).data;
-  expect(tick.restaurants.noodle_nook.register).toBe(27000);
-  expect(collect(tick, 'noodle_nook').coins).toBe(27000);
+  expect(tick.restaurants.noodle_nook.register).toBe(rate * 2);
+  expect(collect(tick, 'noodle_nook').coins).toBe(rate * 2);
   expect(accrue(g, 0, 120000).data.restaurants.noodle_nook.register).toBe(
-    810000,
+    rate * 60,
   );
   g.restaurants.noodle_nook.hasManager = true;
   g.restaurants.noodle_nook.register = 7;
   g.boostUntil = 1000;
-  expect(income(g, 'noodle_nook', 0)).toBe(27000);
-  expect(integratedIncome(g, 'noodle_nook', 0, 2000)).toBe(40500);
-  expect(accrue(g, 0, 2000).data.coins).toBe(40507);
-  expect(offlineIncome(g, 0, 2000)).toBe(20250);
-  expect(offlineIncome(g, 0, 9 * 3600000)).toBe(194406750);
+  expect(income(g, 'noodle_nook', 0)).toBe(rate * 2);
+  expect(integratedIncome(g, 'noodle_nook', 0, 2000)).toBe(rate * 3);
+  expect(accrue(g, 0, 2000).data.coins).toBe(rate * 3 + 7);
+  expect(offlineIncome(g, 0, 2000)).toBe(rate * 1.5);
+  expect(offlineIncome(g, 0, 9 * 3600000)).toBe(rate * 28801 * 0.5);
 });
 it('real 50→51 purchase retains cost, gems and all unrelated progress', () => {
   const g = fresh();
@@ -140,7 +146,7 @@ it.each([1, 2, 3, 4])(
       savedAt: 1000,
       pendingOffline: 234,
     });
-    expect(income(parsed, 'noodle_nook', 1000)).toBe(12000);
+    expect(income(parsed, 'noodle_nook', 1000)).toBe(12000 * 1.1);
     expect(parseSave(serialize(parsed, 1000, 234))).toEqual(parsed);
   },
 );

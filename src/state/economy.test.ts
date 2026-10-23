@@ -27,7 +27,9 @@ describe('economy', () => {
       const g = fresh();
       g.restaurants.noodle_nook.level = level;
       expect(income(g, 'noodle_nook', 0)).toBe(
-        ((level * mult * rating(level)) / 4) * (level === 100 ? 1.5 : 1),
+        ((level * mult * rating(level)) / 4) *
+          (level === 100 ? 1.5 : 1) *
+          (level >= 100 ? 1.1 : 1),
       );
     }
   });

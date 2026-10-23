@@ -70,10 +70,10 @@ it('continues reproducible earned checkpoints with bounded policies and gem budg
     }
     expect(run.seconds).toBeCloseTo(
       {
-        baseline: 674998.89686,
-        globals: 226796.33822,
-        boosts: 217796.33842,
-        offline: 423895.14528,
+        baseline: 670369.19248,
+        globals: 225253.1046,
+        boosts: 216253.10475,
+        offline: 394869.58702,
       }[policy],
       2,
     );
