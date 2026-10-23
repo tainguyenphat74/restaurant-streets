@@ -32,10 +32,19 @@ try {
     await page.clock.pauseAt(new Date('2026-10-19T12:00:00Z'));
     await page.goto(`${base}/?qa=1`);
     await page.clock.runFor(1000);
+    // Keep Date.now fixed for exact save/economy comparisons while permitting
+    // controlled animation frames for scene remounts and street switches.
+    await page.clock.setFixedTime(await page.evaluate(() => Date.now()));
     await page.waitForFunction(() => window.restaurantQA?.().scene.ready);
     async function exported() {
       await activate(button('Settings'));
       await activate(button('Copy / download save'));
+      // Clipboard writes are asynchronous; read only after the UI confirms one.
+      await expect(
+        page.getByRole('status').filter({
+          hasText: 'Save copied to clipboard.',
+        }),
+      ).toBeVisible();
       const save = JSON.parse(
         await page.evaluate(() => navigator.clipboard.readText()),
       );
@@ -47,10 +56,12 @@ try {
       const fixture = structuredClone(template);
       fixture.coins = 1e15;
       fixture.gems = 42;
-      fixture.neighborhood.unlockedStreets = [
-        'maple_street',
-        'riverside_market',
-      ];
+      fixture.savedAt = await page.evaluate(() => Date.now());
+      // Maple's 24→25 case has not earned the Riverside prerequisite yet.
+      fixture.neighborhood.unlockedStreets =
+        id === 'river_grill'
+          ? ['maple_street', 'riverside_market']
+          : ['maple_street'];
       fixture.neighborhood.currentStreet =
         id === 'river_grill' ? 'riverside_market' : 'maple_street';
       // Unlock prerequisite is earned in this explicitly imported fixture.
@@ -68,6 +79,8 @@ try {
         page.getByText('Street restored.', { exact: true }),
       ).toBeVisible();
       await activate(button('Back to the neighborhood'));
+      await page.clock.runFor(1000);
+      await page.waitForFunction(() => window.restaurantQA?.().scene.ready);
       return fixture;
     }
     const mastery = page.getByRole('region', {
@@ -96,7 +109,7 @@ try {
         [50, 'Artisan', 'Master'],
         [100, 'Master', ''],
       ]) {
-        await restore(id, target - 1);
+        const fixture = await restore(id, target - 1);
         await open(name);
         await expect(mastery.getByRole('progressbar')).toHaveAttribute(
           'value',
@@ -107,6 +120,7 @@ try {
           String(target),
         );
         const before = await exported();
+        expect(before).toEqual(fixture);
         await activate(
           page.getByRole('button', { name: /Upgrade restaurant/ }),
         );
@@ -126,6 +140,10 @@ try {
         await activate(button('Close restaurant'));
         await page.reload();
         expect(await exported()).toEqual(after);
+        // Exact saved progress is checked before advancing the paused frame clock.
+        // Phaser needs animation frames after reload to rebuild map hit targets.
+        await page.clock.runFor(1000);
+        await page.waitForFunction(() => window.restaurantQA?.().scene.ready);
         await open(name);
         await expect(mastery).toContainText(`${badge} · Earned`);
         expect(
@@ -152,6 +170,8 @@ try {
     await activate(button('Settings'));
     await activate(button('Reset my street'));
     await activate(button('Yes, start fresh'));
+    await page.clock.runFor(1000);
+    await page.waitForFunction(() => window.restaurantQA?.().scene.ready);
     await open('Noodle Nook');
     await expect(mastery).toContainText('No badges earned yet');
     await expect(mastery.getByRole('progressbar')).toHaveAttribute(

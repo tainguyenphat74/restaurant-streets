@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { RestaurantMastery } from './RestaurantMastery';
 import { quoteLevels, nextMilestone, type BuyMode } from '../state/bulk';
 import { useShallow } from 'zustand/react/shallow';
 import { useGame } from '../state/store';
@@ -167,6 +168,7 @@ function SelectedRestaurant({ selected }: { selected: string }) {
           </div>
         </>
       )}
+      <RestaurantMastery id={selected} />
       <h3>Made with love</h3>
       <div className="dishes">
         {c.dishes.map((d) => (
