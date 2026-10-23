@@ -802,6 +802,21 @@ hr {
     padding: 5px 9px;
   }
 }
+/* Fit all four tabs on narrow phones without reducing their text size. */
+@media (max-width: 360px) {
+  .topbar nav button {
+    padding-inline: 10px;
+  }
+}
+/* Keep enlarged dish content clear of the sticky header in short phones. */
+@media (max-width: 767px) and (max-height: 400px) {
+  .restaurant-panel {
+    padding-bottom: 12px;
+  }
+  .restaurant-panel-header {
+    padding-block: 4px;
+  }
+}
 /* Landscape phones retain useful scrolling room below the existing nav. */
 @media (min-width: 768px) and (max-height: 500px) {
   .restaurant-panel {

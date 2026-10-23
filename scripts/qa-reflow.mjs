@@ -16,6 +16,7 @@ try {
     ['landscape-root-200', 844, 390, true, '200%'],
     ['short-landscape-root-200', 667, 320, true, '200%'],
     ['narrow-default', 320, 640, true, '100%'],
+    ['short-landscape-default', 667, 320, true, '100%'],
     ['desktop-default', 1440, 900, false, '100%'],
   ]) {
     const context = await browser.newContext({
@@ -218,8 +219,16 @@ try {
     await settings();
     await contained(page.locator('.topbar'), 'topbar');
     for (const tab of ['Kitchen', 'Upgrades', 'Rankings', 'Street']) {
-      await coordinateActivate(button(tab));
-      await expect(button(tab)).toHaveAttribute('aria-current', 'page');
+      const target = button(tab);
+      const box = await target.boundingBox();
+      expect(box.width, `${name}: ${tab} touch width`).toBeGreaterThanOrEqual(
+        44,
+      );
+      expect(box.height, `${name}: ${tab} touch height`).toBeGreaterThanOrEqual(
+        44,
+      );
+      await coordinateActivate(target);
+      await expect(target).toHaveAttribute('aria-current', 'page');
     }
     async function exported() {
       await activate(button('Settings'));
