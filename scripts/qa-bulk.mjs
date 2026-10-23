@@ -137,19 +137,29 @@ try {
     await expect(upgrade).toBeDisabled();
     await fixture(9, 1e6);
     await purchase('Next milestone', 1);
-    await expect(page.locator('.milestone-progress')).toContainText(
+    await expect(page.locator('div.milestone-progress')).toContainText(
       'Level 10 / 25',
     );
-    await expect(page.locator('.milestone-progress')).toContainText(
+    await expect(page.locator('div.milestone-progress')).toContainText(
       '×2 income milestone · +5 gems',
     );
     await purchase('Next milestone', 15);
     expect((await data()).gems).toBe(10);
+    await expect(
+      page.getByRole('region', { name: 'Restaurant mastery', exact: true }),
+    ).toContainText('Apprentice · Earned');
     await fixture(1, 1e9);
     await purchase('Buy max', 999);
     expect((await data()).gems).toBe(20);
+    // A single bulk action skips all three cosmetic thresholds without claims.
+    const mastery = page.getByRole('region', {
+      name: 'Restaurant mastery',
+      exact: true,
+    });
+    await expect(mastery).toContainText('Master · Earned');
+    await expect(mastery).toContainText('Mastery complete');
     await expect(mode('Next milestone')).toBeDisabled();
-    await expect(page.locator('.milestone-progress')).toContainText(
+    await expect(page.locator('div.milestone-progress')).toContainText(
       'All milestones complete',
     );
     await fixture(99, 1e9);
@@ -166,7 +176,7 @@ try {
     await fixture(999, 10 * 1.15 ** 999);
     await purchase('Buy max', 999);
     await expect(upgrade).toBeDisabled();
-    await expect(page.locator('.milestone-progress')).toContainText(
+    await expect(page.locator('div.milestone-progress')).toContainText(
       'Max level reached',
     );
     await expect(mode('Next milestone')).toBeDisabled();
