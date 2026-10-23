@@ -19,11 +19,16 @@ export function RestaurantPanel() {
 function SelectedRestaurant({ selected }: { selected: string }) {
   const heading = useRef<HTMLHeadingElement>(null);
   const opener = useRef<HTMLElement | null>(null);
+  const openerCaptured = useRef(false);
   useEffect(() => {
-    opener.current =
-      document.activeElement instanceof HTMLElement
-        ? document.activeElement
-        : null;
+    // Preserve even a null opener when StrictMode replays this effect.
+    if (!openerCaptured.current) {
+      opener.current =
+        document.activeElement instanceof HTMLElement
+          ? document.activeElement
+          : null;
+      openerCaptured.current = true;
+    }
     heading.current?.focus();
   }, []);
   const [mode, setMode] = useState<BuyMode>('1');

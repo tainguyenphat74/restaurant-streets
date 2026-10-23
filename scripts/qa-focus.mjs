@@ -100,24 +100,14 @@ try {
     }
     await page.keyboard.press('Escape');
     await expect(kitchenVisit).toBeFocused();
-    // Reopening and keyed selection changes must each retain their own opener.
-    const coffeeVisit = button('Visit restaurant ↗').nth(1);
+    // Repeat the fresh owned restaurant without inventing another owned card.
     for (let round = 0; round < 2; round++) {
       await activate(kitchenVisit);
       await expect(heading('Noodle Nook')).toBeFocused();
-      // The mobile sheet can cover Kitchen cards; dismiss with a real tap.
-      // Desktop changes the keyed selection while the old panel is open.
-      if (mobile) {
-        await activate(button('Close restaurant'));
-        await expect(kitchenVisit).toBeFocused();
-      }
-      await activate(coffeeVisit);
-      await expect(heading('Coffee Corner')).toBeFocused();
-      await expect(panel('Noodle Nook')).toHaveCount(0);
       await activate(button('Close restaurant'));
-      await expect(coffeeVisit).toBeFocused();
+      await expect(kitchenVisit).toBeFocused();
       await frames();
-      await expect(coffeeVisit).toBeFocused();
+      await expect(kitchenVisit).toBeFocused();
     }
     expect(await exported()).toEqual(original);
     // Dismiss before Phaser has received frames to project map controls.
@@ -198,6 +188,26 @@ try {
       page.getByText('Street restored.', { exact: true }),
     ).toBeVisible();
     await activate(button('Back to the neighborhood'));
+    // Both cards really exist only after this explicitly imported fixture.
+    await activate(button('Kitchen'));
+    const coffeeVisit = button('Visit restaurant ↗').nth(1);
+    for (let round = 0; round < 2; round++) {
+      await activate(kitchenVisit);
+      await expect(heading('Noodle Nook')).toBeFocused();
+      // The mobile sheet covers cards; close before the next real tap.
+      if (mobile) {
+        await activate(button('Close restaurant'));
+        await expect(kitchenVisit).toBeFocused();
+      }
+      await activate(coffeeVisit);
+      await expect(heading('Coffee Corner')).toBeFocused();
+      await expect(panel('Noodle Nook')).toHaveCount(0);
+      await activate(button('Close restaurant'));
+      await expect(coffeeVisit).toBeFocused();
+      await frames();
+      await expect(coffeeVisit).toBeFocused();
+    }
+    expect(await exported()).toEqual(fixture);
     await visit('Noodle Nook');
     // Tab reaches actions and can leave this nonmodal panel.
     await page.keyboard.press('Tab');
