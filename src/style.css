@@ -380,8 +380,34 @@ main {
   bottom: 20px;
   width: 320px;
   overflow: auto;
+  scroll-padding-top: 88px;
   padding: 20px;
   animation: slide 0.25s ease-out;
+}
+/* Keep the name and dismissal in the panel's own scrolling context. */
+.restaurant-panel-header {
+  position: sticky;
+  top: -20px;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: -20px -20px 12px;
+  padding: 12px 20px;
+  background: white;
+  border-bottom: 1px solid #f0e9df;
+}
+.restaurant-panel-header h2 {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+}
+.restaurant-panel-header h2 small {
+  display: block;
+}
+.restaurant-panel-header .close {
+  position: static;
+  flex-shrink: 0;
 }
 .close {
   position: absolute;
@@ -728,6 +754,10 @@ hr {
     border-radius: 24px 24px 0 0;
     padding: 20px 24px;
   }
+  .restaurant-panel-header {
+    margin-inline: -24px;
+    padding-inline: 24px;
+  }
   .preview {
     height: 100px;
   }
@@ -770,6 +800,15 @@ hr {
   .coin-bubble {
     font-size: 11px;
     padding: 5px 9px;
+  }
+}
+/* Landscape phones retain useful scrolling room below the existing nav. */
+@media (min-width: 768px) and (max-height: 500px) {
+  .restaurant-panel {
+    top: auto;
+    bottom: 8px;
+    max-height: calc(100vh - 112px);
+    max-height: calc(100dvh - 112px);
   }
 }
 @media (prefers-reduced-motion: reduce) {

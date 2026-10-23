@@ -132,7 +132,7 @@ try {
       const b = await panel.boundingBox();
       const x = b.x + b.width / 2;
       const start = Math.min(height - 12, b.y + b.height - 18);
-      const distance = Math.min(120, b.height - 100);
+      const distance = Math.min(60, b.height - 120);
       expect(distance).toBeGreaterThan(30);
       if (mobile) {
         // Native touch input, no DOM scrollTop assignment or locator auto-scroll.
@@ -159,20 +159,43 @@ try {
     }
     async function bottom() {
       let sawMastery = false;
+      const seen = new Set();
+      const contentSelector =
+        '.restaurant-mastery h3, .restaurant-mastery strong, .restaurant-mastery p, .restaurant-mastery label, .restaurant-mastery small, .restaurant-panel > h3';
+      const contentCount = await panel.evaluate(
+        (el, selector) => el.querySelectorAll(selector).length,
+        contentSelector,
+      );
       for (let i = 0; i < 50; i++) {
         await scrollStep();
-        const state = await panel.evaluate((el) => {
+        const state = await panel.evaluate((el, selector) => {
           const p = el.getBoundingClientRect();
           const h = el.querySelector('h2').getBoundingClientRect();
           const m = el
             .querySelector('.restaurant-mastery h3')
             .getBoundingClientRect();
           return {
+            visibleContent: [...el.querySelectorAll(selector)].flatMap(
+              (node, index) => {
+                const r = node.getBoundingClientRect();
+                return r.top >= h.bottom &&
+                  r.bottom <= p.bottom &&
+                  node.contains(
+                    document.elementFromPoint(
+                      r.x + r.width / 2,
+                      r.y + r.height / 2,
+                    ),
+                  )
+                  ? [index]
+                  : [];
+              },
+            ),
             top: el.scrollTop,
             end: el.scrollTop + el.clientHeight >= el.scrollHeight - 2,
             mastery: m.top >= Math.max(p.top, h.bottom) && m.bottom <= p.bottom,
           };
-        });
+        }, contentSelector);
+        state.visibleContent.forEach((index) => seen.add(index));
         if (state.top > 0) await geometry(); // Behavioral RED on old production.
         sawMastery ||= state.mastery;
         if (state.end) break;
@@ -180,6 +203,10 @@ try {
           throw new Error(`${name}: native scrolling never reached bottom`);
       }
       expect(sawMastery, 'Mastery heading accessible during scroll').toBe(true);
+      expect(
+        seen.size,
+        'Every mastery disclosure and dishes heading accessible during scrolling',
+      ).toBe(contentCount);
       expect(await panel.evaluate((el) => el.scrollTop)).toBeGreaterThan(0);
       // Every dish, including the last content, fits below the sticky heading.
       expect(

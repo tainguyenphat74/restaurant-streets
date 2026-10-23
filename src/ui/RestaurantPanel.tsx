@@ -75,6 +75,18 @@ function SelectedRestaurant({ selected }: { selected: string }) {
         }
       }}
     >
+      <div className="restaurant-panel-header">
+        <h2 ref={heading} tabIndex={-1}>
+          {c.name} <small>· Lv {r.level}</small>
+        </h2>
+        <button
+          className="close icon-button"
+          aria-label="Close restaurant"
+          onClick={close}
+        >
+          ×
+        </button>
+      </div>
       <div className="preview" style={{ background: c.color + '22' }}>
         {previews[selected] ? (
           <img
@@ -89,16 +101,6 @@ function SelectedRestaurant({ selected }: { selected: string }) {
           <span>{c.emoji}</span>
         )}
       </div>
-      <h2 ref={heading} tabIndex={-1}>
-        {c.name} <small>· Lv {r.level}</small>
-      </h2>
-      <button
-        className="close icon-button"
-        aria-label="Close restaurant"
-        onClick={close}
-      >
-        ×
-      </button>
       <div className="stars">
         ★★★★★{' '}
         <span>
