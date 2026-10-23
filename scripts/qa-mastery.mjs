@@ -95,9 +95,11 @@ try {
     }
     await open('Noodle Nook');
     await expect(mastery).toContainText('Next: Apprentice at level 25');
-    await expect(mastery).toContainText('Cosmetic recognition only');
     await expect(mastery).toContainText(
-      'Existing milestone rewards and late-level income are unchanged',
+      'Apprentice and Artisan are cosmetic badges',
+    );
+    await expect(mastery).toContainText(
+      'Next perk: +10% income for this restaurant at Master (level 100).',
     );
     await activate(button('Close restaurant'));
     for (const [id, name, cost] of [
@@ -128,6 +130,9 @@ try {
         if (next) await expect(mastery).toContainText(`Next: ${next}`);
         else {
           await expect(mastery).toContainText('Mastery complete');
+          await expect(mastery).toContainText(
+            'Master perk active: +10% income for this restaurant.',
+          );
           await expect(mastery.getByRole('progressbar')).toHaveCount(0);
         }
         const after = await exported();

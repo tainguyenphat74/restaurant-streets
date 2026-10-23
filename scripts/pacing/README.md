@@ -73,4 +73,31 @@ The offline result remains schedule-sensitive and includes whole eight-hour
 intervals. These are simulated elapsed seconds, not benchmark runtime or human
 play measurements. Even after tuning, baseline is 7.81 days and the earned-boost
 branch is 2.52 days of optimistic play: this is one improvement, not a claim that
-late balance is finished. Individual mastery remains queued.
+late balance is finished. This historical run predates the individual Master perk.
+
+## Individual Master income perk
+
+Owned restaurants at level 100 or above now receive an automatic individual
++10% income multiplier. Income below 100 is unchanged. The same simulator and
+four earned policies produced these actual cumulative both-100 seconds:
+
+| Policy                                   | Before Master perk |  After Master perk |
+| ---------------------------------------- | -----------------: | -----------------: |
+| No globals / no boosts, active           |  674998.8968581543 |   670369.192482666 |
+| Globals, active                          |  226796.3382175293 |  225253.1046027832 |
+| Globals + earned boosts, active          | 217796.33842260743 | 216253.10474951172 |
+| Globals + earned boosts, bounded offline |  423895.1452841797 |  394869.5870212402 |
+
+The shared both-25 checkpoint remains 2695.0581635742187 seconds. Both-50
+checkpoints remain 7274.635888427734 / 4221.584209472656 /
+3458.321171875 / 3458.409656982422 seconds in table order. Boost counts/gem
+balances remain 0/160, 0/160, 15/10, 15/10. Offline manager readiness remains
+2695.1452841796877 seconds. Total offline seconds change from 374400 to 345600:
+the policy still takes discrete eight-hour offline intervals and buys only during
+active intervals, so completion is schedule-sensitive rather than a smooth
+percentage reduction.
+
+All collection limits, earned-funds/gem constraints, target caps, global purchase
+order, boost expiry rules and one-hour-active/eight-hours-offline scheduling above
+are unchanged. These are deterministic policy outputs, not optimal strategies or
+player metrics; no human latency or save-claim lifecycle is simulated.

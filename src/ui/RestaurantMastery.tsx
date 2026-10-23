@@ -43,9 +43,10 @@ export const RestaurantMastery = memo(function RestaurantMastery({
       </div>
       <small>Apprentice 25 · Artisan 50 · Master 100</small>
       <p>
-        Cosmetic recognition only, earned automatically for this restaurant. No
-        claim or extra reward. Existing milestone rewards and late-level income
-        are unchanged.
+        {owned && level >= 100
+          ? 'Master perk active: +10% income for this restaurant.'
+          : 'Next perk: +10% income for this restaurant at Master (level 100).'}{' '}
+        Automatic; no claim needed. Apprentice and Artisan are cosmetic badges.
       </p>
     </section>
   );

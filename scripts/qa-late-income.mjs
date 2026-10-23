@@ -127,9 +127,9 @@ try {
     expect(await exported()).toEqual(save);
     await measure(515.1);
     await restore(100);
-    await measure(3000);
+    await measure(3300);
     await restore(101, true);
-    await measure(3030, true);
+    await measure(3333, true);
     await activate(button('Kitchen'));
     await expect(help).toBeVisible();
     expect(
@@ -143,7 +143,7 @@ try {
     });
     expect(errors).toEqual([]);
     console.log(
-      `PASS late income ${mobile ? 'mobile taps' : 'desktop keyboard'}: supported fixtures, 50→51 actual upgrade, measured 500/515.1/3000/3030 rates, register/manager, exact export/reload, disclosure, overflow, zero page errors`,
+      `PASS late income ${mobile ? 'mobile taps' : 'desktop keyboard'}: supported fixtures, 50→51 actual upgrade, measured 500/515.1/3300/3333 rates, register/manager, exact export/reload, disclosure, overflow, zero page errors`,
     );
     await context.close();
   }
