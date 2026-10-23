@@ -1,4 +1,5 @@
 import { chromium, expect } from '@playwright/test';
+const strictMode = process.env.QA_STRICT_MODE === '1';
 const base = process.env.QA_URL;
 if (!base) throw new Error('Set QA_URL to stable production preview');
 // Supported imports/exports; Canvas fixtures, not natural progression.
@@ -16,6 +17,20 @@ try {
       reducedMotion: 'reduce',
       permissions: ['clipboard-read', 'clipboard-write'],
     });
+    if (strictMode) {
+      // Observe real calls without simulating replay or changing focus behavior.
+      await context.addInitScript(() => {
+        const focus = HTMLElement.prototype.focus;
+        window.__headingFocusCalls = new WeakMap();
+        HTMLElement.prototype.focus = function (...args) {
+          if (this.matches('.restaurant-panel h2')) {
+            const calls = window.__headingFocusCalls;
+            calls.set(this, (calls.get(this) || 0) + 1);
+          }
+          return focus.apply(this, args);
+        };
+      });
+    }
     const page = await context.newPage();
     const errors = [];
     page.on('pageerror', (e) => errors.push(e.message));
@@ -72,8 +87,38 @@ try {
     const kitchenVisit = button('Visit restaurant ↗').first();
     await activate(kitchenVisit);
     await expect(heading('Noodle Nook')).toBeFocused();
+    if (strictMode) {
+      // Production cannot satisfy this: React development StrictMode runs the
+      // mount effect twice on the same DOM node before any user dismissal.
+      await expect
+        .poll(() =>
+          heading('Noodle Nook').evaluate((el) =>
+            window.__headingFocusCalls.get(el),
+          ),
+        )
+        .toBe(2);
+    }
     await page.keyboard.press('Escape');
     await expect(kitchenVisit).toBeFocused();
+    // Reopening and keyed selection changes must each retain their own opener.
+    const coffeeVisit = button('Visit restaurant ↗').nth(1);
+    for (let round = 0; round < 2; round++) {
+      await activate(kitchenVisit);
+      await expect(heading('Noodle Nook')).toBeFocused();
+      // The mobile sheet can cover Kitchen cards; dismiss with a real tap.
+      // Desktop changes the keyed selection while the old panel is open.
+      if (mobile) {
+        await activate(button('Close restaurant'));
+        await expect(kitchenVisit).toBeFocused();
+      }
+      await activate(coffeeVisit);
+      await expect(heading('Coffee Corner')).toBeFocused();
+      await expect(panel('Noodle Nook')).toHaveCount(0);
+      await activate(button('Close restaurant'));
+      await expect(coffeeVisit).toBeFocused();
+      await frames();
+      await expect(coffeeVisit).toBeFocused();
+    }
     expect(await exported()).toEqual(original);
     // Dismiss before Phaser has received frames to project map controls.
     await activate(
