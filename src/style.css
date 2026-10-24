@@ -217,7 +217,7 @@ main {
   pointer-events: auto;
 }
 .building-label {
-  background: #fffcf2ed;
+  background: #fffcf2;
   border: 2px solid white;
   border-radius: 11px;
   box-shadow: 0 4px 8px #47301916;
@@ -228,7 +228,7 @@ main {
 }
 .building-label small {
   display: block;
-  color: #8c7c65;
+  color: #706047;
   font-size: 10px;
 }
 .selected .building-label {
