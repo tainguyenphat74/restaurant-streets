@@ -9,7 +9,7 @@ try {
   for (const mobile of [false, true]) {
     const context = await browser.newContext({
       viewport: mobile
-        ? { width: 390, height: 844 }
+        ? { width: 320, height: 568 }
         : { width: 1440, height: 900 },
       isMobile: mobile,
       hasTouch: mobile,
@@ -64,7 +64,9 @@ try {
         ...structuredClone(original),
         coins: 12345.25,
         gems: 37,
-        pendingOffline: 12.5,
+        // No pending award: closing Settings should restore its opener, not
+        // transfer focus into the intentional Welcome-back modal.
+        pendingOffline: 0,
       };
       await draft.fill(JSON.stringify(fixture));
       await activate(button('Restore save'));
@@ -81,6 +83,34 @@ try {
         await expect(button('Keep my street')).toBeFocused();
         await frames();
         await expect(button('Keep my street')).toBeFocused();
+        expect(
+          await page.evaluate(
+            () => document.documentElement.scrollWidth <= innerWidth + 1,
+          ),
+        ).toBe(true);
+        for (const name of ['Keep my street', 'Yes, start fresh']) {
+          const action = button(name);
+          await action.scrollIntoViewIfNeeded();
+          const box = await action.boundingBox();
+          expect(box.x).toBeGreaterThanOrEqual(0);
+          expect(box.x + box.width).toBeLessThanOrEqual(mobile ? 320 : 1440);
+          expect(box.y).toBeGreaterThanOrEqual(0);
+          expect(box.y + box.height).toBeLessThanOrEqual(mobile ? 568 : 900);
+          expect(
+            await action.evaluate((el) => {
+              const b = el.getBoundingClientRect();
+              return el.contains(
+                document.elementFromPoint(
+                  b.x + b.width / 2,
+                  b.y + b.height / 2,
+                ),
+              );
+            }),
+          ).toBe(true);
+        }
+        await page.screenshot({
+          path: `test-results/reset-focus-${mobile ? 'mobile' : 'desktop'}-imported-fixture.png`,
+        });
         const count = await dialog
           .locator('button:not(:disabled),textarea,a[href]')
           .count();
@@ -94,8 +124,10 @@ try {
             ).toBe(true);
           }
         }
-        // Ticks must not steal focus from the import field during confirmation.
+        // Editing forces a real Settings local-state rerender, unlike clock ticks.
         await tabTo(draft);
+        await draft.fill(`${raw} edited`);
+        await expect(draft).toBeFocused();
         await frames();
         await expect(draft).toBeFocused();
         if (cancellation === 'button') await activate(button('Keep my street'));
@@ -105,7 +137,7 @@ try {
         await expect(button('Reset my street')).toBeFocused();
         await frames();
         await expect(button('Reset my street')).toBeFocused();
-        await expect(draft).toHaveValue(raw);
+        await expect(draft).toHaveValue(`${raw} edited`);
         await page.keyboard.press('Escape');
         await expect(dialog).toHaveCount(0);
         await expect(button('Settings')).toBeFocused();
