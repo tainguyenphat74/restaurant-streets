@@ -136,6 +136,19 @@ try {
           await page.mouse.wheel(0, direction * 90);
         }
         await frames();
+        // Controlled animation frames do not settle Chromium's real-time native
+        // touch-scroll inertia. A tap during inertia can stop scrolling instead
+        // of activating an unobstructed button. Observe actual scroll stability
+        // before computing coordinates; never retry the destructive action.
+        let previous = await dialog.evaluate((el) => el.scrollTop);
+        let stable = 0;
+        for (let i = 0; i < 30 && stable < 3; i++) {
+          await page.waitForTimeout(80);
+          const current = await dialog.evaluate((el) => el.scrollTop);
+          stable = Math.abs(current - previous) < 0.1 ? stable + 1 : 0;
+          previous = current;
+        }
+        expect(stable, `${name}: native scroll settled`).toBe(3);
       }
       async function settingsControl(target) {
         // Only native scrolling; no locator click/tap/fill auto-scroll or force.
@@ -164,6 +177,10 @@ try {
       }
       async function closeSettings() {
         await settingsControl(button('Back to the neighborhood'));
+        if (await dialog.count())
+          await page.screenshot({
+            path: `test-results/touch-targets-${name}-settings-dismiss-diagnostic.png`,
+          });
         await expect(dialog).toHaveCount(0);
         await expect(button('Settings')).toBeFocused();
       }
@@ -184,8 +201,10 @@ try {
       const original = await exported();
       const fixture = {
         ...structuredClone(original),
-        coins: 12345.25,
-        gems: 37,
+        // Deliberately wide compact currency labels exercise a developed
+        // wallet too; these are supported imported values, not earned progress.
+        coins: 999900000000.25,
+        gems: 999900,
         pendingOffline: 0,
       };
       await coordinate(button('Settings'));

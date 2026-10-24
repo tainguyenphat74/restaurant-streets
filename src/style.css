@@ -289,6 +289,12 @@ main {
   font-size: 23px;
   box-shadow: 0 3px 12px #0001;
 }
+.wallet .icon-button,
+.map-controls button {
+  min-width: 44px;
+  min-height: 44px;
+  flex-shrink: 0;
+}
 .street-footer {
   position: absolute;
   bottom: 20px;
@@ -802,10 +808,23 @@ hr {
     padding: 5px 9px;
   }
 }
-/* Fit all four tabs on narrow phones without reducing their text size. */
+/* Fit the wallet and all four tabs without reducing their text size. */
 @media (max-width: 360px) {
+  .topbar {
+    padding-inline: 10px;
+  }
+  .currency {
+    padding-inline: 4px;
+  }
   .topbar nav button {
     padding-inline: 10px;
+  }
+}
+/* Keep map controls in view above the street's minimum-height overflow. */
+@media (max-height: 500px) {
+  .map-controls {
+    top: 16px;
+    bottom: auto;
   }
 }
 /* Keep enlarged dish content clear of the sticky header in short phones. */
