@@ -9,7 +9,8 @@ body {
 :root {
   font-synthesis: none;
   --coral: #e8553a;
-  --muted: #7a7a7a;
+  --muted: #68645f;
+  --coral-text: #bf4028;
   --green: #3ba55c;
 }
 * {
@@ -192,7 +193,7 @@ main {
   font-size: 10px;
   letter-spacing: 2px;
   font-weight: 900;
-  color: #7b8c6e;
+  color: #58664d;
 }
 .street-heading h1 {
   font-size: 32px;
@@ -1049,4 +1050,23 @@ nav button.active {
   .mastery-streets {
     grid-template-columns: minmax(0, 1fr);
   }
+}
+
+/* Solid text surfaces: retain warm coral and existing disabled treatments. */
+nav button.active:not(:disabled),
+.street-switch button[aria-pressed='true']:not(:disabled),
+.button:not(.secondary):not(:disabled) {
+  background: var(--coral-text);
+}
+.button:not(.secondary):hover:not(:disabled) {
+  background: #ab3823;
+}
+.text-button:not(:disabled) {
+  color: var(--coral-text);
+}
+.secondary:not(:disabled) {
+  color: #23733d;
+}
+nav button:disabled:not(.active):not([aria-pressed='true']) {
+  color: #7a7a7a;
 }

@@ -1,4 +1,7 @@
 import { chromium, expect } from '@playwright/test';
+import { mkdir } from 'node:fs/promises';
+
+await mkdir('test-results', { recursive: true });
 
 const base = process.env.QA_URL;
 if (!base)
@@ -221,6 +224,14 @@ try {
           }
         }
       }
+      await activate(button('Rankings'));
+      await measure(button('Rankings'), 'Rankings active navigation');
+      await activate(button('Kitchen'));
+      await page.evaluate(() => window.scrollTo(0, 0));
+      await page.screenshot({
+        path: `test-results/contrast-${mode}-Kitchen-imported-Canvas-fixture.png`,
+        fullPage: true,
+      });
       await activate(button('Settings'));
       const dialog = page.getByRole('dialog');
       await measure(dialog.locator('p').first(), 'Settings muted copy');
