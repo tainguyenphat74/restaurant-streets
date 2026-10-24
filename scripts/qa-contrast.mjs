@@ -235,7 +235,16 @@ try {
       await activate(button('Settings'));
       const dialog = page.getByRole('dialog');
       await measure(dialog.locator('p').first(), 'Settings muted copy');
-      await measure(dialog.locator('.fine-print'), 'Settings fine print');
+      await measure(
+        dialog
+          .locator('.fine-print')
+          .filter({ hasText: 'Import replaces your street.' }),
+        'Settings fine print',
+      );
+      await measure(
+        dialog.locator('#save-file-help'),
+        'Settings backup file help',
+      );
       await measure(button('Copy / download save'), 'Settings coral export');
       await measure(button('Reset my street'), 'Settings coral text');
       await measure(

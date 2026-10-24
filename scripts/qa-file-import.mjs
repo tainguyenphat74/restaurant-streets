@@ -34,8 +34,24 @@ try {
       // Browser API fault injection, never a game/store mutation hook. Support
       // either native Blob.text or FileReader.readAsText implementations.
       await page.addInitScript(() => {
+        const cancelMounts = new WeakMap();
+        let replayedInput = false;
+        const add = EventTarget.prototype.addEventListener;
+        EventTarget.prototype.addEventListener = function (type, ...args) {
+          if (
+            type === 'cancel' &&
+            this instanceof HTMLInputElement &&
+            this.id === 'save-file'
+          ) {
+            const count = (cancelMounts.get(this) ?? 0) + 1;
+            cancelMounts.set(this, count);
+            if (count >= 2) replayedInput = true;
+          }
+          return add.call(this, type, ...args);
+        };
         const pending = new Map();
         window.fileReadQA = {
+          replayed: () => replayedInput,
           pending: (name) => pending.has(name),
           settle(name, reject = false) {
             const finish = pending.get(name);
@@ -111,6 +127,12 @@ try {
       await page.clock.runFor(1000);
       await page.clock.setFixedTime(await page.evaluate(() => Date.now()));
       await ui(button('Settings'));
+      if (process.env.QA_STRICT_MODE === '1') {
+        expect(
+          await page.evaluate(() => window.fileReadQA.replayed()),
+          'Real development StrictMode re-registered cancel on the same input',
+        ).toBe(true);
+      }
       const initial = await exported();
       const fixture = structuredClone(initial);
       Object.assign(fixture, {
@@ -167,7 +189,7 @@ try {
       expect(await page.locator('#root').evaluate((el) => el.inert)).toBe(true);
       const chooserPromise = page.waitForEvent('filechooser');
       if (mobile) await ui(input);
-      else await page.keyboard.press('Enter');
+      else await page.keyboard.press('Space');
       const chooser = await chooserPromise;
       await chooser.setFiles({
         name: 'restaurant-streets.json',
