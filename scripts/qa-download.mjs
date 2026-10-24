@@ -57,7 +57,18 @@ try {
             value: mode === 'unavailable' ? undefined : clipboard,
           });
         };
+        const click = HTMLAnchorElement.prototype.click;
+        HTMLAnchorElement.prototype.click = function () {
+          if (
+            qa.failure === 'click' &&
+            this.download === 'restaurant-streets.json'
+          )
+            throw new DOMException('QA click failure', 'NotSupportedError');
+          return click.call(this);
+        };
         URL.createObjectURL = (blob) => {
+          if (qa.failure === 'create')
+            throw new DOMException('QA URL failure', 'NotSupportedError');
           const url = create(blob);
           qa.created.push({ url, type: blob.type });
           return url;
@@ -246,6 +257,35 @@ try {
         );
       }
       expect(await stored()).toBe(rawBefore);
+      // Inject only browser download setup failures: no fake download payloads.
+      for (const failure of ['create', 'click']) {
+        const before = await observed();
+        const count = downloads.length;
+        await page.evaluate((value) => {
+          window.downloadQA.failure = value;
+        }, failure);
+        await explicitActivation('Enter');
+        await expect(status).toHaveText(
+          'Could not start the backup download. Please try again.',
+        );
+        await page.clock.runFor(1500);
+        const after = await observed();
+        expect(downloads.length).toBe(count);
+        expect(after.calls).toBe(before.calls);
+        expect(after.created.length - before.created.length).toBe(
+          failure === 'click' ? 1 : 0,
+        );
+        if (failure === 'click') {
+          const url = after.created.at(-1).url;
+          expect(after.revoked.filter((value) => value === url)).toHaveLength(
+            1,
+          );
+        }
+        expect(await stored()).toBe(rawBefore);
+      }
+      await page.evaluate(() => {
+        window.downloadQA.failure = undefined;
+      });
       await mode('success');
       await restore(initial);
       const initialRaw = await stored();
