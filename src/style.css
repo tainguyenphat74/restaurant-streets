@@ -183,6 +183,19 @@ main {
 .canvas-host canvas {
   display: block;
 }
+.street .canvas-host:focus-visible {
+  outline: 3px solid #285e60;
+  outline-offset: -6px;
+}
+.street #map-keyboard-instructions {
+  display: none;
+}
+.street .canvas-host:focus-visible ~ .street-footer #map-keyboard-instructions {
+  display: inline;
+}
+.street .canvas-host:focus-visible ~ .street-footer .map-pointer-instructions {
+  display: none;
+}
 .street-heading {
   position: absolute;
   left: 38px;

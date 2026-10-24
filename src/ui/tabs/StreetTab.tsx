@@ -62,7 +62,53 @@ function StreetView({ onSwitch }: { onSwitch: (id: string) => void }) {
   }, []);
   return (
     <div className="street">
-      <div ref={host} className="canvas-host" />
+      <div
+        ref={host}
+        className="canvas-host"
+        role="region"
+        aria-label={`${neighborhood.name} map`}
+        aria-describedby="map-keyboard-instructions"
+        tabIndex={0}
+        onKeyDown={(event) => {
+          if (
+            event.target !== event.currentTarget ||
+            document.activeElement !== event.currentTarget ||
+            event.altKey ||
+            event.ctrlKey ||
+            event.metaKey ||
+            event.nativeEvent.isComposing ||
+            !scene.current
+          )
+            return;
+          switch (event.key) {
+            case 'ArrowLeft':
+              scene.current.panByScreen(-48, 0);
+              break;
+            case 'ArrowRight':
+              scene.current.panByScreen(48, 0);
+              break;
+            case 'ArrowUp':
+              scene.current.panByScreen(0, -48);
+              break;
+            case 'ArrowDown':
+              scene.current.panByScreen(0, 48);
+              break;
+            case '+':
+            case '=':
+              scene.current.zoom(1.15);
+              break;
+            case '-':
+              scene.current.zoom(1 / 1.15);
+              break;
+            case 'Home':
+              scene.current.recenter();
+              break;
+            default:
+              return;
+          }
+          event.preventDefault();
+        }}
+      />
       <div className="street-heading">
         <span className="eyebrow">YOUR LITTLE FOOD NEIGHBORHOOD</span>
         <h1>Life tastes better here.</h1>
@@ -136,9 +182,14 @@ function StreetFooter() {
         </strong>
       </div>
       <p>
-        {first
-          ? 'Tap the gold coin bubble to collect your first earnings. Upgrade Noodle Nook for more!'
-          : 'Drag to explore · Scroll or pinch to zoom · Tap a restaurant to visit'}
+        <span className="map-pointer-instructions">
+          {first
+            ? 'Tap the gold coin bubble to collect your first earnings. Upgrade Noodle Nook for more!'
+            : 'Drag to explore · Scroll or pinch to zoom · Tap a restaurant to visit'}
+        </span>
+        <span id="map-keyboard-instructions">
+          Arrow keys pan · + / − zoom · Home recenters · Tab moves to controls
+        </span>
       </p>
     </div>
   );

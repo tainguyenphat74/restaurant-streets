@@ -1,4 +1,7 @@
 import { chromium, expect } from '@playwright/test';
+import { mkdir } from 'node:fs/promises';
+
+await mkdir('test-results', { recursive: true });
 
 const base = process.env.QA_URL;
 if (!base)
@@ -44,9 +47,9 @@ try {
       async function key(value, count = 1) {
         for (let i = 0; i < count; i++) {
           await page.keyboard.press(value);
-          await page.clock.runFor(32);
         }
-        await frames();
+        // Scene methods update synchronously; two controlled frames settle projection.
+        await page.clock.runFor(32);
         return camera();
       }
       async function exported() {
@@ -158,7 +161,10 @@ try {
             );
             expect(after.zoom).toBe(before.zoom);
           }
-          expect(await camera()).toEqual(origin);
+          const returned = await camera();
+          expect(returned.scrollX).toBeCloseTo(origin.scrollX, 10);
+          expect(returned.scrollY).toBeCloseTo(origin.scrollY, 10);
+          expect(returned.zoom).toBe(origin.zoom);
         }
         await key('Home');
         const plus = await key('+');
@@ -235,6 +241,17 @@ try {
         await expect(page.locator('canvas')).toHaveCount(1);
         await tabTo(map);
         expect(await key('Home')).toEqual(home);
+        await key('=', 6);
+        const remounted = await camera();
+        const step = await key('ArrowRight');
+        expect((step.scrollX - remounted.scrollX) * remounted.zoom).toBeCloseTo(
+          distance,
+          4,
+        );
+        await key('Home');
+        await page.screenshot({
+          path: `test-results/map-keyboard-${mobile ? 'mobile' : 'desktop'}-${street}-imported-Canvas-fixture.png`,
+        });
         expect(await exported()).toEqual(fixture);
       }
       expect(errors).toEqual([]);

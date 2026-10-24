@@ -344,12 +344,19 @@ export class StreetScene extends Phaser.Scene {
       .setScale(scale * m.scale)
       .setDepth(x + y);
   }
+  panByScreen(x: number, y: number) {
+    if (!this.ready || this.disposed) return;
+    const c = this.cameras.main;
+    c.setScroll(c.clampX(c.scrollX + x / c.zoom), c.clampY(c.scrollY + y / c.zoom));
+  }
   zoom(factor: number) {
+    if (!this.ready || this.disposed) return;
     this.cameras.main.setZoom(
       Phaser.Math.Clamp(this.cameras.main.zoom * factor, 0.5, 2),
     );
   }
   recenter() {
+    if (this.disposed || !this.cameras?.main) return;
     const c = this.cameras.main,
       w = this.scale.width,
       h = this.scale.height;
