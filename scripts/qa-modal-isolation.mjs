@@ -1,5 +1,6 @@
 import { chromium, expect } from '@playwright/test';
 
+const strictMode = process.env.QA_STRICT_MODE === '1';
 const base = process.env.QA_URL;
 if (!base) throw new Error('Set QA_URL to a stable production preview');
 // Supported save UI + fixed wall time + Canvas: fixture evidence only.
@@ -19,8 +20,21 @@ try {
       reducedMotion: 'reduce',
       permissions: ['clipboard-read', 'clipboard-write'],
     });
+    if (strictMode)
+      await context.addInitScript(() => {
+        const focus = HTMLElement.prototype.focus;
+        window.__modalFocusCalls = new WeakMap();
+        HTMLElement.prototype.focus = function (...args) {
+          if (this.matches('[role="dialog"] button')) {
+            const calls = window.__modalFocusCalls;
+            calls.set(this, (calls.get(this) || 0) + 1);
+          }
+          return focus.apply(this, args);
+        };
+      });
     try {
       const page = await context.newPage();
+      const coordinateCoverage = new Set();
       const errors = [];
       page.on('pageerror', (error) => errors.push(error.message));
       const mode = mobile ? 'mobile coordinate touch' : 'desktop natural Tab';
@@ -201,15 +215,14 @@ try {
           if (selected)
             await expect(panel.locator('h2')).toContainText(selected);
         }
+        // A taller mobile dialog can cover every navigation point after a
+        // status/draft rerender. Probe only exposed geometry, never through the
+        // dialog. Navigation and Settings are both required over the full run.
+        for (const label of clicked) coordinateCoverage.add(label);
         expect(
           clicked,
-          'Real background coordinate probes must include navigation and Settings',
-        ).toEqual(
-          expect.arrayContaining([
-            'background navigation',
-            'background Settings opener',
-          ]),
-        );
+          'Every state has real exposed Settings input',
+        ).toContain('background Settings opener');
         // A backdrop click can legitimately blur the dialog. Native focus must
         // still work inside it, and subsequent natural Tab must be confined.
         const action = dialog.locator('button').first();
@@ -244,6 +257,13 @@ try {
       await frames();
       await page.clock.setFixedTime(await page.evaluate(() => Date.now()));
       await activate(settings);
+      if (strictMode) {
+        const first = dialog.locator('button').first();
+        expect(
+          await first.evaluate((el) => window.__modalFocusCalls.get(el)),
+          'Real development StrictMode replay focuses the same dialog action twice',
+        ).toBe(2);
+      }
       const fixture = {
         ...(await exported()),
         coins: 12345.25,
@@ -289,6 +309,9 @@ try {
         const raw = '  unfinished import draft\n{"coins": 42';
         await draft.fill(raw);
         await isolated(background, tab, 'Noodle Nook');
+        await page.screenshot({
+          path: `test-results/modal-isolation-${mobile ? 'mobile' : 'desktop'}-${tab}-imported-Canvas-fixture.png`,
+        });
         await expect(draft).toHaveValue(raw);
         expect(
           await exported(),
@@ -373,9 +396,52 @@ try {
         await expect(button('Collect earnings')).toHaveCount(0);
         await fullSave(claimed);
       }
+      // Harness-only body siblings cover native isolation bookkeeping; these
+      // are not game state writes or shipped hooks. Preserve nonempty inert.
+      await page.evaluate(() => {
+        const existing = document.createElement('button');
+        existing.id = 'qa-original-inert';
+        existing.setAttribute('inert', 'already-isolated');
+        document.body.append(existing);
+      });
+      await activate(settings);
+      await page.evaluate(() => {
+        const dynamic = document.createElement('button');
+        dynamic.id = 'qa-dynamic-background';
+        document.body.append(dynamic);
+      });
+      await expect
+        .poll(() =>
+          page.locator('#qa-dynamic-background').evaluate((el) => el.inert),
+        )
+        .toBe(true);
+      expect(
+        await page.locator('#qa-original-inert').evaluate((el) => el.inert),
+      ).toBe(true);
+      await activate(button('Back to the neighborhood'));
+      await expect(settings).toBeFocused();
+      await expect(page.locator('#qa-original-inert')).toHaveAttribute(
+        'inert',
+        'already-isolated',
+      );
+      expect(
+        await page
+          .locator('#qa-dynamic-background')
+          .evaluate((el) => el.hasAttribute('inert')),
+      ).toBe(false);
+      await page.evaluate(() => {
+        document.getElementById('qa-original-inert').remove();
+        document.getElementById('qa-dynamic-background').remove();
+      });
+      expect([...coordinateCoverage]).toEqual(
+        expect.arrayContaining([
+          'background navigation',
+          'background Settings opener',
+        ]),
+      );
       expect(errors).toEqual([]);
       console.log(
-        `PASS ${mode}: Settings Street/Kitchen + selected panel/draft; local reset Escape; close and native background focus restoration; pending welcome isolation/single claim; exact full saves and repeated reload. Canvas fixture only; zero page errors.`,
+        `PASS ${mode}: Settings Street/Kitchen + selected panel/draft; local reset Escape; close and native background focus restoration; pending welcome isolation/single claim; exact full saves and repeated reload; existing/dynamic inert preservation${strictMode ? '; real development replay' : ''}. Canvas fixture only; zero page errors.`,
       );
     } finally {
       await context.close();

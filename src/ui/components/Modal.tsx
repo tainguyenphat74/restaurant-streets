@@ -1,4 +1,5 @@
-import { useEffect, useRef, type ReactNode } from 'react';
+import { useLayoutEffect, useRef, type ReactNode } from 'react';
+import { createPortal } from 'react-dom';
 export function Modal({
   title,
   children,
@@ -9,14 +10,32 @@ export function Modal({
   close?: () => void;
 }) {
   const ref = useRef<HTMLDivElement>(null);
-  useEffect(() => {
+  const closeRef = useRef(close);
+  useLayoutEffect(() => {
+    closeRef.current = close;
+  }, [close]);
+  useLayoutEffect(() => {
     const previous = document.activeElement as HTMLElement | null;
     const box = ref.current!;
+    const backdrop = box.parentElement!;
+    const background = new Map<Element, string | null>();
+    const isolate = () => {
+      for (const sibling of document.body.children) {
+        if (sibling === backdrop || background.has(sibling)) continue;
+        background.set(sibling, sibling.getAttribute('inert'));
+        sibling.setAttribute('inert', '');
+      }
+    };
+    // The portal stays usable while the app root (including future children)
+    // and any other body siblings are natively isolated.
+    isolate();
+    const observer = new MutationObserver(isolate);
+    observer.observe(document.body, { childList: true });
     box.querySelector<HTMLElement>('button,textarea')?.focus();
     const key = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && close) {
+      if (e.key === 'Escape' && closeRef.current) {
         e.stopPropagation();
-        close();
+        closeRef.current();
       }
       if (e.key === 'Tab') {
         const elements = Array.from(
@@ -38,10 +57,16 @@ export function Modal({
     box.addEventListener('keydown', key);
     return () => {
       box.removeEventListener('keydown', key);
+      observer.disconnect();
+      for (const [element, inert] of background) {
+        if (inert === null) element.removeAttribute('inert');
+        else element.setAttribute('inert', inert);
+      }
+      // Restore isolation first so native focus works, including effect replay.
       previous?.focus();
     };
-  }, [close]);
-  return (
+  }, []);
+  return createPortal(
     <div className="modal-backdrop">
       <div
         ref={ref}
@@ -53,6 +78,7 @@ export function Modal({
         <h2>{title}</h2>
         {children}
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
