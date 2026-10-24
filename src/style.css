@@ -30,7 +30,8 @@ button:disabled {
 }
 button:focus-visible,
 a:focus-visible,
-textarea:focus-visible {
+textarea:focus-visible,
+.save-file:focus-visible {
   outline: 3px solid #65a8aa;
   outline-offset: 4px;
 }
@@ -634,6 +635,19 @@ hr {
   border-radius: 10px;
   padding: 10px;
   font: 12px monospace;
+}
+.save-file {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  min-height: 44px;
+  font: inherit;
+}
+.save-file::file-selector-button {
+  min-height: 44px;
+  max-width: 100%;
+  font: inherit;
+  cursor: pointer;
 }
 .modal-actions {
   display: flex;

@@ -1,4 +1,7 @@
 import { chromium, expect } from '@playwright/test';
+import { mkdir } from 'node:fs/promises';
+
+await mkdir('test-results', { recursive: true });
 
 const base = process.env.QA_URL;
 if (!base)
@@ -11,11 +14,14 @@ const browser = await chromium.launch({
 });
 // Imported Canvas fixtures only; qa.mjs retains natural WebGL gameplay coverage.
 try {
-  for (const mobile of [false, true]) {
+  for (const [mobile, width, height] of [
+    [false, 1440, 900],
+    [true, 390, 844],
+    [true, 320, 568],
+    [true, 667, 320],
+  ]) {
     const context = await browser.newContext({
-      viewport: mobile
-        ? { width: 390, height: 844 }
-        : { width: 1440, height: 900 },
+      viewport: { width, height },
       isMobile: mobile,
       hasTouch: mobile,
       reducedMotion: 'reduce',
@@ -159,8 +165,38 @@ try {
       }
       await expect(input).toBeFocused();
       expect(await page.locator('#root').evaluate((el) => el.inert)).toBe(true);
-      await choose('restaurant-streets.json', backup);
+      const chooserPromise = page.waitForEvent('filechooser');
+      if (mobile) await ui(input);
+      else await page.keyboard.press('Enter');
+      const chooser = await chooserPromise;
+      await chooser.setFiles({
+        name: 'restaurant-streets.json',
+        mimeType: 'application/json',
+        buffer: Buffer.from(backup),
+      });
       await expect(draft).toHaveValue(backup);
+      await expect(status).toContainText(/loaded.*draft.*review.*Restore/i);
+      await expect(input).toHaveValue('');
+      const bounds = await input.boundingBox();
+      expect(bounds.height).toBeGreaterThanOrEqual(44);
+      expect(bounds.width).toBeGreaterThan(100);
+      expect(
+        await dialog.evaluate((el) => el.scrollWidth <= el.clientWidth),
+      ).toBe(true);
+      await input.scrollIntoViewIfNeeded();
+      await page.screenshot({
+        path: `test-results/file-import-${width}x${height}-imported-Canvas-fixture.png`,
+      });
+      await unchanged();
+      // Boundary reads do not bypass the existing explicit Restore validation.
+      await choose('empty.json', '');
+      await expect(draft).toHaveValue('');
+      await expect(button('Restore save')).toBeDisabled();
+      await unchanged();
+      const atLimit =
+        backup + ' '.repeat(maxFileBytes - Buffer.byteLength(backup));
+      await choose('at-limit.json', atLimit);
+      await expect(draft).toHaveValue(atLimit);
       await unchanged();
       await draft.fill('manual edit between identical selections');
       await choose('restaurant-streets.json', backup);
@@ -190,6 +226,23 @@ try {
       await expect(draft).toHaveValue('retained draft');
       await unchanged();
       for (const reject of [false, true]) {
+        for (const action of ['cancel', 'oversize', 'restore', 'reset']) {
+          await draft.fill('retained draft');
+          await choose('deferred-action.json', backup);
+          if (action === 'cancel') await input.dispatchEvent('cancel');
+          if (action === 'oversize')
+            await choose('oversized.json', ' '.repeat(maxFileBytes + 1));
+          if (action === 'restore') await ui(button('Restore save'));
+          if (action === 'reset') {
+            await ui(button('Reset my street'));
+            await ui(button('Keep my street'));
+          }
+          const actionMessage = await status.textContent();
+          await settle('deferred-action.json', reject);
+          await expect(draft).toHaveValue('retained draft');
+          await expect(status).toHaveText(actionMessage);
+          await unchanged();
+        }
         await choose('deferred-edit.json', backup);
         await expect
           .poll(() =>
@@ -268,7 +321,7 @@ try {
       await expect(dialog).toContainText('Original raw save remains untouched');
       expect(errors).toEqual([]);
       console.log(
-        `PASS ${mobile ? 'mobile' : 'desktop'} file draft/exact export, explicit restore, invalid/oversized/unreadable, stale resolve/reject, same file, modal/reset, protected bytes, all fields and single pending claim/reload; Canvas fixtures`,
+        `PASS ${mobile ? 'mobile' : 'desktop'} ${width}x${height} file draft/exact export, explicit restore, empty/1MiB/invalid/oversized/unreadable, stale resolve/reject, same file, modal/reset, protected bytes, all fields and single pending claim/reload; Canvas fixtures`,
       );
     } finally {
       await context.close();
