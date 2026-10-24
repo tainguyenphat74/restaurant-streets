@@ -70,26 +70,46 @@ export function Settings({ close }: { close: () => void }) {
   }
   const blocked = useGame((s) => s.storageError);
   const protectedSave = useGame((s) => s.saveProtected);
-  async function copy() {
+  function exportSave() {
     const json = exportGame();
     if (json === null) {
       setMessage(
         'Export paused: this temporary street has not recovered your saved progress. Original raw save remains untouched. Import a valid save or reset first.',
       );
-      return;
     }
+    return json;
+  }
+  function download(json: string) {
+    let url: string | undefined;
+    try {
+      const blob = new Blob([json], { type: 'application/json' });
+      url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'restaurant-streets.json';
+      a.click();
+      setMessage('Save downloaded.');
+    } catch {
+      setMessage('Could not start the backup download. Please try again.');
+    } finally {
+      if (url !== undefined) {
+        const downloadUrl = url;
+        setTimeout(() => URL.revokeObjectURL(downloadUrl), 1000);
+      }
+    }
+  }
+  function downloadBackup() {
+    const json = exportSave();
+    if (json !== null) download(json);
+  }
+  async function copy() {
+    const json = exportSave();
+    if (json === null) return;
     try {
       await navigator.clipboard.writeText(json);
       setMessage('Save copied to clipboard.');
     } catch {
-      const blob = new Blob([json], { type: 'application/json' }),
-        url = URL.createObjectURL(blob),
-        a = document.createElement('a');
-      a.href = url;
-      a.download = 'restaurant-streets.json';
-      a.click();
-      setTimeout(() => URL.revokeObjectURL(url), 1000);
-      setMessage('Save downloaded.');
+      download(json);
     }
   }
   return (
@@ -115,7 +135,16 @@ export function Settings({ close }: { close: () => void }) {
               : 'Browser storage is unavailable. Keep an exported backup; progress may be lost when you close this page.'}
           </p>
         )}
-        <Button onClick={copy}>Copy / download save</Button>
+        <div className="modal-actions">
+          <Button onClick={copy}>Copy / download save</Button>
+          <Button
+            className="secondary"
+            style={{ minHeight: 44 }}
+            onClick={downloadBackup}
+          >
+            Download backup
+          </Button>
+        </div>
         <label className="import-label" htmlFor="save-file">
           Load a JSON backup file
         </label>
