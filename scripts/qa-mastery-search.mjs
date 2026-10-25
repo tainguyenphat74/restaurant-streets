@@ -280,9 +280,25 @@ try {
       expect(
         await search.evaluate((el) => el instanceof HTMLInputElement),
       ).toBe(true);
+      await expect(search).toHaveAttribute('type', 'search');
       await expect(search).toHaveValue('');
       await expect(clear).toHaveCount(0);
 
+      async function visibleFocus(target) {
+        expect(
+          await target.evaluate((el) => {
+            const s = getComputedStyle(el);
+            return (
+              el.matches(':focus-visible') &&
+              ((s.outlineStyle !== 'none' &&
+                parseFloat(s.outlineWidth) > 0 &&
+                s.outlineColor !== 'rgba(0, 0, 0, 0)') ||
+                s.boxShadow !== 'none')
+            );
+          }),
+          'New search controls paint visible keyboard focus',
+        ).toBe(true);
+      }
       async function activate(target) {
         const rect = await layout(target);
         if (mobile)
@@ -292,6 +308,7 @@ try {
           );
         else {
           await tabTo(target);
+          await visibleFocus(target);
           await page.keyboard.press('Enter');
         }
       }
@@ -302,7 +319,10 @@ try {
             rect.x + rect.width / 2,
             rect.y + rect.height / 2,
           );
-        else await tabTo(search);
+        else {
+          await tabTo(search);
+          await visibleFocus(search);
+        }
         await expect(search).toBeFocused();
         await page.keyboard.press('ControlOrMeta+A');
         await page.keyboard.press('Backspace');
