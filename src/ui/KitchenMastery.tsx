@@ -72,10 +72,10 @@ function StreetSummary({
       {/* The unchanged open prop initializes expansion; the browser owns toggles. */}
       <details className="mastery-disclosure" open>
         <summary>
-          <h3>
+          <span className="mastery-street-name" role="heading" aria-level={3}>
             {street.name}
             {!unlocked && ' · Locked'}
-          </h3>
+          </span>
           <span className="mastery-counts">
             {summary.badges} / {summary.total * 3} badges earned ·{' '}
             {summary.completed} / {summary.total} restaurants complete

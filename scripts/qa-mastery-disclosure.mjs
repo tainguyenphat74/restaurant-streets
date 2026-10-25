@@ -316,6 +316,9 @@ try {
       await summaries(partial);
       await toggle(1, true, 'Enter');
       await state(0, false);
+      await restore(partial);
+      await state(0, false);
+      await state(1, true);
       await expect(region(1).getByRole('listitem')).toHaveCount(1);
       await expect(region(1).getByRole('listitem')).toContainText(
         'Market Gelato',
@@ -403,6 +406,10 @@ try {
         );
       }
       await summaries(advanced);
+      await summary(0).scrollIntoViewIfNeeded();
+      await page.screenshot({
+        path: `test-results/mastery-disclosure-${width}x${height}-imported-Canvas-fixture.png`,
+      });
       expect(errors).toEqual([]);
       console.log(
         `PASS mastery disclosure ${width}x${height}: native default open, independent state, keyboard/coordinate touch/44px hit tests, hidden Tab order, locked goal, mounted Restore/level/filter retention, whole-catalog summaries/empty states, visits, exact exports/reload, no errors/overflow; imported Canvas fixtures`,

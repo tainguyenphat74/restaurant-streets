@@ -1068,8 +1068,9 @@ nav button.active {
   outline: 3px solid #254f50;
   outline-offset: 2px;
 }
-.mastery-disclosure > summary h3 {
-  display: inline;
+.mastery-street-name {
+  font-size: 1.17em;
+  font-weight: 700;
 }
 .mastery-disclosure > summary > .mastery-counts {
   display: block;
