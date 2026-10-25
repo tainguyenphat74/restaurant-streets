@@ -1,5 +1,12 @@
 # Restaurant Streets — Development Log
 
+## Kitchen mastery results feedback — local implementation, release gates pending
+
+- Baseline `ceb8c7a`; regression committed first as `9cbd6e3` (`scripts/qa-mastery-results.mjs`). Parent reports genuine public-production browser RED at line411: per-street visible results status expected1/got0 after successful boot and fixture export. This is parent-provided evidence, not a worker browser run.
+- Bounded runtime adds stable street-derived status IDs linked from Search restaurants via `aria-describedby`. Each polite, atomic status displays “Showing X of Y restaurants” outside native details, including when collapsed; its accessible label names the street. Counts reuse the existing shallow filtered catalog selection for query, Hide completed and mounted Restore. Whole-street badge summaries remain unchanged. Combined-filter empty copy says “No unfinished restaurants match search.” No new clock subscriptions, save writes, economy/schema/dependency or Phaser changes.
+- Worker local gates: full `npm test` passes 179 tests /25 files; focused Prettier for runtime, regression script and README, `node --check scripts/qa-mastery-results.mjs`, and `git diff --check` pass. README documents the visible count and collapsed/Restore behavior. `npm run build` passes TypeScript and production bundling, with the existing large-chunk warning.
+- Parent retains release lock PID2512185 and owns independent review, stable-artifact browser gates and publication/live verification; all remain pending for this slice. Worker did not execute browser QA, start servers, acquire/release the lock, push or deploy. No screen-reader or physical-device acceptance is claimed. Existing regression and historical work are preserved.
+
 ## Kitchen mastery name search — live
 
 - One bounded remaining mobile/discovery release from clean `56df196`, matched fetched origin/main under exclusive parent release lock PID2495195. Current log supersedes stale task snapshot: positive late-income balance tuning, individual mastery and prior discovery/order/disclosures are already live; none repeated.

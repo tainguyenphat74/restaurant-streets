@@ -11,6 +11,8 @@ import { Button } from './components/Button';
 
 type Neighborhood = (typeof neighborhoods)[number];
 
+const resultsId = (street: StreetId) => `mastery-results-${street}`;
+
 export const KitchenMastery = memo(function KitchenMastery() {
   const [hideCompleted, setHideCompleted] = useState(false);
   const [nearestFirst, setNearestFirst] = useState(false);
@@ -33,6 +35,9 @@ export const KitchenMastery = memo(function KitchenMastery() {
           id="mastery-search-input"
           ref={searchInput}
           type="search"
+          aria-describedby={neighborhoods
+            .map((street) => resultsId(street.id))
+            .join(' ')}
           value={query}
           onChange={(event) => setQuery(event.target.value)}
         />
@@ -122,6 +127,16 @@ function StreetSummary({
   );
   return (
     <section aria-label={`${street.name} mastery`}>
+      <p
+        id={resultsId(street.id)}
+        role="status"
+        aria-label={`${street.name} restaurant results`}
+        aria-live="polite"
+        aria-atomic="true"
+      >
+        Showing {visibleRestaurants.length} of {street.restaurants.length}{' '}
+        restaurants
+      </p>
       {/* The unchanged open prop initializes expansion; the browser owns toggles. */}
       <details className="mastery-disclosure" open>
         <summary>
@@ -139,7 +154,9 @@ function StreetSummary({
         {visibleRestaurants.length === 0 && (
           <p>
             {query.trim()
-              ? 'No restaurants match search.'
+              ? hideCompleted
+                ? 'No unfinished restaurants match search.'
+                : 'No restaurants match search.'
               : 'All restaurants mastered.'}
           </p>
         )}
