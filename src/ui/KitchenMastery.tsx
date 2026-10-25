@@ -75,6 +75,20 @@ export const KitchenMastery = memo(function KitchenMastery() {
         Owned restaurants closest by remaining levels first; not a cost or time
         estimate.
       </p>
+      {(query.length > 0 || hideCompleted || nearestFirst) && (
+        <Button
+          type="button"
+          className="secondary mastery-reset-view"
+          onClick={() => {
+            setQuery('');
+            setHideCompleted(false);
+            setNearestFirst(false);
+            searchInput.current?.focus();
+          }}
+        >
+          Reset mastery view
+        </Button>
+      )}
       <div className="mastery-streets">
         {neighborhoods.map((street) => (
           <StreetSummary
