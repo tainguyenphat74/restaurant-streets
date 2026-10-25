@@ -2,6 +2,7 @@ import { memo, useState } from 'react';
 import { useShallow } from 'zustand/react/shallow';
 import { neighborhoods } from '../data/neighborhoods';
 import { restaurantMastery } from '../state/mastery';
+import { masteryOrder } from '../state/mastery-order';
 import { masterySummary } from '../state/mastery-summary';
 import { useGame } from '../state/store';
 import type { StreetId } from '../state/economy';
@@ -11,6 +12,7 @@ type Neighborhood = (typeof neighborhoods)[number];
 
 export const KitchenMastery = memo(function KitchenMastery() {
   const [hideCompleted, setHideCompleted] = useState(false);
+  const [nearestFirst, setNearestFirst] = useState(false);
   return (
     <section
       className="card kitchen-mastery"
@@ -30,12 +32,26 @@ export const KitchenMastery = memo(function KitchenMastery() {
         />
         <span>Hide completed restaurants</span>
       </label>
+      <label className="mastery-filter">
+        <input
+          type="checkbox"
+          checked={nearestFirst}
+          onChange={(event) => setNearestFirst(event.target.checked)}
+          aria-describedby="mastery-order-help"
+        />
+        <span>Nearest next badge first</span>
+      </label>
+      <p id="mastery-order-help">
+        Owned restaurants closest by remaining levels first; not a cost or time
+        estimate.
+      </p>
       <div className="mastery-streets">
         {neighborhoods.map((street) => (
           <StreetSummary
             key={street.id}
             street={street}
             hideCompleted={hideCompleted}
+            nearestFirst={nearestFirst}
           />
         ))}
       </div>
@@ -46,9 +62,11 @@ export const KitchenMastery = memo(function KitchenMastery() {
 function StreetSummary({
   street,
   hideCompleted,
+  nearestFirst,
 }: {
   street: Neighborhood;
   hideCompleted: boolean;
+  nearestFirst: boolean;
 }) {
   // Shallow numeric results exclude register, currency and clock changes.
   const summary = useGame(
@@ -58,14 +76,20 @@ function StreetSummary({
     s.data.neighborhood.unlockedStreets.includes(street.id),
   );
   const visibleRestaurants = useGame(
-    useShallow((s) =>
-      hideCompleted
-        ? street.restaurants.filter((restaurant) => {
+    useShallow((s) => {
+      const catalog = nearestFirst
+        ? masteryOrder<Neighborhood['restaurants'][number]>(
+            s.data.restaurants,
+            street.restaurants,
+          )
+        : street.restaurants;
+      return hideCompleted
+        ? catalog.filter((restaurant) => {
             const { owned, level } = s.data.restaurants[restaurant.id];
             return restaurantMastery(owned, level).target !== 0;
           })
-        : street.restaurants,
-    ),
+        : catalog;
+    }),
   );
   return (
     <section aria-label={`${street.name} mastery`}>
