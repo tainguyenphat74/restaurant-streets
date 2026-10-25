@@ -120,7 +120,17 @@ try {
         if (!open) await expect(region(i).getByRole('listitem')).toHaveCount(0);
       }
       async function layout(target) {
-        await target.scrollIntoViewIfNeeded();
+        await target.evaluate((el) => {
+          el.scrollIntoView({ block: 'center', inline: 'nearest' });
+          // Center in the actually usable viewport below the fixed header.
+          const header = document
+            .querySelector('.topbar')
+            .getBoundingClientRect();
+          const rect = el.getBoundingClientRect();
+          const top =
+            header.bottom + (innerHeight - header.bottom - rect.height) / 2;
+          window.scrollBy({ top: rect.top - top, behavior: 'instant' });
+        });
         const rect = await target.boundingBox();
         expect(rect).not.toBeNull();
         expect(rect.width).toBeGreaterThanOrEqual(44);
