@@ -17,7 +17,11 @@ export const KitchenMastery = memo(function KitchenMastery() {
       aria-labelledby="kitchen-mastery-title"
     >
       <h2 id="kitchen-mastery-title">Kitchen mastery</h2>
-      <p>Cosmetic badges only · Apprentice 25 · Artisan 50 · Master 100.</p>
+      <p>
+        Apprentice 25 · Artisan 50 · Master 100. Apprentice and Artisan are
+        cosmetic badges. Master perk: +10% income for each Master restaurant.
+        Automatic; no claim needed.
+      </p>
       <label className="mastery-filter">
         <input
           type="checkbox"
@@ -128,6 +132,23 @@ const MasteryRow = memo(function MasteryRow({
           {mastery.target
             ? `Next: ${mastery.next} at level ${mastery.target}`
             : 'Mastery complete'}
+        </span>
+        {mastery.target > 0 && (
+          <>
+            <span>
+              Level {mastery.level} / {mastery.target}
+            </span>
+            <progress
+              aria-label={`${restaurant.name} progress to ${mastery.next}`}
+              value={mastery.level}
+              max={mastery.target}
+            />
+          </>
+        )}
+        <span>
+          {owned && level >= 100
+            ? 'Master perk active: +10% income for this restaurant.'
+            : 'Next perk: +10% income for this restaurant at Master (level 100).'}
         </span>
       </div>
       {unlocked ? (

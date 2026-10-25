@@ -1082,6 +1082,11 @@ nav button.active {
 .mastery-list .button {
   flex-shrink: 0;
 }
+.mastery-list progress {
+  display: block;
+  width: 100%;
+  min-width: 0;
+}
 .mastery-unlock {
   display: inline-flex;
   align-items: center;
