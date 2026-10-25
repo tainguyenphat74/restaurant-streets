@@ -339,7 +339,11 @@ try {
       }
       async function noResults(i) {
         await ordered(i, []);
-        await expect(region(i)).toContainText(/no restaurants match/i);
+        await expect(region(i)).toContainText(
+          (await filter.isChecked())
+            ? 'No unfinished restaurants match search.'
+            : 'No restaurants match search.',
+        );
         await expect(region(i)).not.toContainText('All restaurants mastered.');
       }
       async function retained(action) {

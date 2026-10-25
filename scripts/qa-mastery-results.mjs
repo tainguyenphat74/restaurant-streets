@@ -501,6 +501,12 @@ try {
       await page.screenshot({
         path: `test-results/mastery-results-${width}x${height}-imported-Canvas-fixture.png`,
       });
+      await status(0).evaluate((el) =>
+        el.scrollIntoView({ block: 'center', inline: 'nearest' }),
+      );
+      await page.screenshot({
+        path: `test-results/mastery-results-${width}x${height}-status-imported-Canvas-fixture.png`,
+      });
       await page.reload();
       await frames();
       expect(await exported()).toEqual(advanced);
