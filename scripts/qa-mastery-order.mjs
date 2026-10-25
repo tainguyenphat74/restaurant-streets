@@ -90,7 +90,12 @@ try {
         );
       }
       async function orderToggle(checked) {
-        const label = overview.locator('label').filter({ has: order });
+        const label = overview.locator('label').filter({
+          has: page.getByRole('checkbox', {
+            name: 'Nearest next badge first',
+            exact: true,
+          }),
+        });
         const rect = await layout(label);
         const nodes = await Promise.all([
           details(0).elementHandle(),
@@ -438,6 +443,33 @@ try {
       await ordered(0, [1, 2, 3, 4, 5]);
       await orderToggle(true);
       await ordered(0, [5, 2, 3, 4, 1]);
+      // A mounted Restore must reorder still-unfinished rows, not only remove
+      // newly completed ones. Keep every keyed row and both disclosure nodes.
+      const retainedRows = await overview.locator('li').elementHandles();
+      const closer = structuredClone(partial);
+      closer.restaurants.coffee_corner.level = 99;
+      await restore(closer);
+      await expect(order).toBeChecked();
+      await ordered(0, [1, 5, 2, 3, 4]);
+      await state(0, false);
+      await state(1, true);
+      for (const row of retainedRows) {
+        expect(await row.evaluate((el) => el.isConnected)).toBe(true);
+        await row.dispose();
+      }
+      await restore(partial);
+      await ordered(0, [5, 2, 3, 4, 1]);
+      await layout(
+        overview.locator('label').filter({
+          has: page.getByRole('checkbox', {
+            name: 'Nearest next badge first',
+            exact: true,
+          }),
+        }),
+      );
+      await page.screenshot({
+        path: `test-results/mastery-order-${width}x${height}-controls-imported-Canvas-fixture.png`,
+      });
       await expect(region(1).getByRole('listitem')).toHaveCount(1);
       await expect(region(1).getByRole('listitem')).toContainText(
         'Market Gelato',
@@ -545,7 +577,7 @@ try {
       });
       expect(errors).toEqual([]);
       console.log(
-        `PASS mastery order ${width}x${height}: native default open, independent state, keyboard/coordinate touch/44px hit tests, hidden Tab order, locked goal, mounted Restore/level/filter retention, whole-catalog summaries/empty states, visits, exact exports/reload, no errors/overflow; imported Canvas fixtures`,
+        `PASS mastery order ${width}x${height}: default catalog/optional nearest-next ordering, stable ties/groups/rows, keyboard/coordinate touch/44px hit tests, disclosures/hidden Tab order, mounted unfinished-row reorder and threshold/filter updates, locked goal, whole-catalog summaries/empty states, visits, exact exports/reload, no errors/overflow; imported Canvas fixtures`,
       );
     } finally {
       await context.close();
