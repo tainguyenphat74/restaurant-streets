@@ -342,6 +342,10 @@ try {
       await restore(advanced);
       for (const i of [0, 1]) await state(i, false);
       await summaries(advanced);
+      await layout(summary(0));
+      await page.screenshot({
+        path: `test-results/mastery-disclosure-${width}x${height}-collapsed-imported-Canvas-fixture.png`,
+      });
       await ui(filter);
       await expect(filter).not.toBeChecked();
       for (const i of [0, 1]) await state(i, false);
@@ -416,7 +420,7 @@ try {
         );
       }
       await summaries(advanced);
-      await summary(0).scrollIntoViewIfNeeded();
+      await layout(summary(0));
       await page.screenshot({
         path: `test-results/mastery-disclosure-${width}x${height}-imported-Canvas-fixture.png`,
       });
