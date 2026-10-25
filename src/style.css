@@ -1037,6 +1037,21 @@ nav button.active {
 .kitchen-mastery {
   margin-bottom: 24px;
 }
+.mastery-filter {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  margin-bottom: 12px;
+  cursor: pointer;
+}
+.mastery-filter input {
+  flex-shrink: 0;
+}
+.mastery-filter span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
 .mastery-streets {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));

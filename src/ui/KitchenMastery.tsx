@@ -1,4 +1,4 @@
-import { memo } from 'react';
+import { memo, useState } from 'react';
 import { useShallow } from 'zustand/react/shallow';
 import { neighborhoods } from '../data/neighborhoods';
 import { restaurantMastery } from '../state/mastery';
@@ -10,6 +10,7 @@ import { Button } from './components/Button';
 type Neighborhood = (typeof neighborhoods)[number];
 
 export const KitchenMastery = memo(function KitchenMastery() {
+  const [hideCompleted, setHideCompleted] = useState(false);
   return (
     <section
       className="card kitchen-mastery"
@@ -17,22 +18,50 @@ export const KitchenMastery = memo(function KitchenMastery() {
     >
       <h2 id="kitchen-mastery-title">Kitchen mastery</h2>
       <p>Cosmetic badges only · Apprentice 25 · Artisan 50 · Master 100.</p>
+      <label className="mastery-filter">
+        <input
+          type="checkbox"
+          checked={hideCompleted}
+          onChange={(event) => setHideCompleted(event.target.checked)}
+        />
+        <span>Hide completed restaurants</span>
+      </label>
       <div className="mastery-streets">
         {neighborhoods.map((street) => (
-          <StreetSummary key={street.id} street={street} />
+          <StreetSummary
+            key={street.id}
+            street={street}
+            hideCompleted={hideCompleted}
+          />
         ))}
       </div>
     </section>
   );
 });
 
-function StreetSummary({ street }: { street: Neighborhood }) {
+function StreetSummary({
+  street,
+  hideCompleted,
+}: {
+  street: Neighborhood;
+  hideCompleted: boolean;
+}) {
   // Shallow numeric results exclude register, currency and clock changes.
   const summary = useGame(
     useShallow((s) => masterySummary(s.data.restaurants, street.restaurants)),
   );
   const unlocked = useGame((s) =>
     s.data.neighborhood.unlockedStreets.includes(street.id),
+  );
+  const visibleRestaurants = useGame(
+    useShallow((s) =>
+      hideCompleted
+        ? street.restaurants.filter((restaurant) => {
+            const { owned, level } = s.data.restaurants[restaurant.id];
+            return restaurantMastery(owned, level).target !== 0;
+          })
+        : street.restaurants,
+    ),
   );
   return (
     <section aria-label={`${street.name} mastery`}>
@@ -56,8 +85,9 @@ function StreetSummary({ street }: { street: Neighborhood }) {
           </a>
         </p>
       )}
+      {visibleRestaurants.length === 0 && <p>All restaurants mastered.</p>}
       <ul className="mastery-list">
-        {street.restaurants.map((restaurant) => (
+        {visibleRestaurants.map((restaurant) => (
           <MasteryRow
             key={restaurant.id}
             restaurant={restaurant}
