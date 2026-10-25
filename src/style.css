@@ -1037,6 +1037,25 @@ nav button.active {
 .kitchen-mastery {
   margin-bottom: 24px;
 }
+.mastery-search {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.mastery-search label {
+  flex-basis: 100%;
+}
+.mastery-search input {
+  flex: 1 1 160px;
+  width: 100%;
+  min-width: 44px;
+  min-height: 44px;
+}
+.mastery-search .button {
+  min-width: 44px;
+  min-height: 44px;
+}
 .mastery-filter {
   display: flex;
   align-items: center;

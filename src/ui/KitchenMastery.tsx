@@ -1,8 +1,9 @@
-import { memo, useState } from 'react';
+import { memo, useRef, useState } from 'react';
 import { useShallow } from 'zustand/react/shallow';
 import { neighborhoods } from '../data/neighborhoods';
 import { restaurantMastery } from '../state/mastery';
 import { masteryOrder } from '../state/mastery-order';
+import { masterySearch } from '../state/mastery-search';
 import { masterySummary } from '../state/mastery-summary';
 import { useGame } from '../state/store';
 import type { StreetId } from '../state/economy';
@@ -13,6 +14,8 @@ type Neighborhood = (typeof neighborhoods)[number];
 export const KitchenMastery = memo(function KitchenMastery() {
   const [hideCompleted, setHideCompleted] = useState(false);
   const [nearestFirst, setNearestFirst] = useState(false);
+  const [query, setQuery] = useState('');
+  const searchInput = useRef<HTMLInputElement>(null);
   return (
     <section
       className="card kitchen-mastery"
@@ -24,6 +27,28 @@ export const KitchenMastery = memo(function KitchenMastery() {
         cosmetic badges. Master perk: +10% income for each Master restaurant.
         Automatic; no claim needed.
       </p>
+      <div className="mastery-search">
+        <label htmlFor="mastery-search-input">Search restaurants</label>
+        <input
+          id="mastery-search-input"
+          ref={searchInput}
+          type="search"
+          value={query}
+          onChange={(event) => setQuery(event.target.value)}
+        />
+        {query.length > 0 && (
+          <Button
+            type="button"
+            className="secondary"
+            onClick={() => {
+              setQuery('');
+              searchInput.current?.focus();
+            }}
+          >
+            Clear search
+          </Button>
+        )}
+      </div>
       <label className="mastery-filter">
         <input
           type="checkbox"
@@ -52,6 +77,7 @@ export const KitchenMastery = memo(function KitchenMastery() {
             street={street}
             hideCompleted={hideCompleted}
             nearestFirst={nearestFirst}
+            query={query}
           />
         ))}
       </div>
@@ -63,10 +89,12 @@ function StreetSummary({
   street,
   hideCompleted,
   nearestFirst,
+  query,
 }: {
   street: Neighborhood;
   hideCompleted: boolean;
   nearestFirst: boolean;
+  query: string;
 }) {
   // Shallow numeric results exclude register, currency and clock changes.
   const summary = useGame(
@@ -83,12 +111,13 @@ function StreetSummary({
             street.restaurants,
           )
         : street.restaurants;
-      return hideCompleted
+      const incomplete = hideCompleted
         ? catalog.filter((restaurant) => {
             const { owned, level } = s.data.restaurants[restaurant.id];
             return restaurantMastery(owned, level).target !== 0;
           })
         : catalog;
+      return masterySearch(incomplete, query);
     }),
   );
   return (
@@ -107,7 +136,13 @@ function StreetSummary({
           <span className="mastery-show">Show restaurants</span>
           <span className="mastery-hide">Hide restaurants</span>
         </summary>
-        {visibleRestaurants.length === 0 && <p>All restaurants mastered.</p>}
+        {visibleRestaurants.length === 0 && (
+          <p>
+            {query.trim()
+              ? 'No restaurants match search.'
+              : 'All restaurants mastered.'}
+          </p>
+        )}
         <ul className="mastery-list">
           {visibleRestaurants.map((restaurant) => (
             <MasteryRow
