@@ -1,4 +1,6 @@
 import { chromium, expect } from '@playwright/test';
+import { mkdir } from 'node:fs/promises';
+await mkdir('test-results', { recursive: true });
 
 const base = process.env.QA_URL;
 if (!base) throw new Error('Set QA_URL to stable production preview');
@@ -246,9 +248,12 @@ try {
         gems: 42,
         upgrades: ['ingredients'],
       });
-      // Validator allows unowned high levels: canonical mastery must stay zero.
+      // Supported imports require owned iff level > 0 and an owned starter.
       for (const [id] of catalog)
-        Object.assign(fixture.restaurants[id], { owned: false, level: 100 });
+        Object.assign(fixture.restaurants[id], {
+          owned: id === 'noodle_nook',
+          level: id === 'noodle_nook' ? 1 : 0,
+        });
       await restore(fixture);
       await check(fixture);
       await expect(
@@ -263,16 +268,33 @@ try {
       await expect(page.locator('#riverside-title')).toBeFocused();
       expect(await exported()).toEqual(fixture);
 
+      const levels = [0, 24, 25, 49, 50, 99, 100];
+      // Low Maple thresholds must be tested while Riverside remains locked.
+      // The always-owned starter uses level 1 instead of impossible level 0.
+      for (let phase = 0; phase < levels.length; phase++) {
+        streets[0][1].forEach(([id], index) => {
+          const level = Math.max(
+            id === 'noodle_nook' ? 1 : 0,
+            levels[(phase + index) % levels.length],
+          );
+          Object.assign(fixture.restaurants[id], { owned: level > 0, level });
+        });
+        await restore(fixture);
+        await check(fixture);
+        expect(await exported()).toEqual(fixture);
+      }
       fixture.neighborhood.unlockedStreets = [
         'maple_street',
         'riverside_market',
       ];
-      // Seven bounded imports cover every boundary on EVERY restaurant in both
-      // streets; rotating levels also exercises mixed completed/unfinished rows.
-      const levels = [0, 24, 25, 49, 50, 99, 100];
+      // Unlocked saves require every Maple level >=25. Rotate all Riverside
+      // boundaries plus the valid late Maple boundaries without weakening saves.
       for (let phase = 0; phase < levels.length; phase++) {
         catalog.forEach(([id], index) => {
-          const level = levels[(phase + index) % levels.length];
+          const level = Math.max(
+            index < 6 ? 25 : 0,
+            levels[(phase + index) % levels.length],
+          );
           Object.assign(fixture.restaurants[id], { owned: level > 0, level });
         });
         await restore(fixture);
@@ -282,6 +304,12 @@ try {
         await check(fixture, true);
         expect(await exported()).toEqual(fixture);
         if (phase === 0) {
+          await overview
+            .getByRole('heading', { name: 'Kitchen mastery', exact: true })
+            .scrollIntoViewIfNeeded();
+          await page.screenshot({
+            path: `test-results/mastery-progress-${width}x${height}-imported-Canvas-fixture.png`,
+          });
           const updated = structuredClone(fixture);
           updated.restaurants.noodle_nook = {
             ...updated.restaurants.noodle_nook,
