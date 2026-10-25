@@ -481,6 +481,21 @@ try {
       await ui(order);
       await results([0, 0], advanced);
       expect(await exported()).toEqual(advanced);
+      await resetView(advanced);
+      // Recover from a combined empty result, then prove tab-local defaults.
+      await query('no-match');
+      await ui(filter);
+      await ui(order);
+      await results([0, 0], advanced);
+      await ui(button('Upgrades'));
+      await ui(button('Kitchen'));
+      await defaults(advanced, false);
+      for (const i of [0, 1]) await state(i, true);
+      expect(await exported()).toEqual(advanced);
+      // Reload with active combined controls independently verifies non-persistence.
+      await query('no-match');
+      await ui(filter);
+      await ui(order);
       await page.reload();
       await frames();
       expect(await exported()).toEqual(advanced);
