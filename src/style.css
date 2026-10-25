@@ -1057,6 +1057,33 @@ nav button.active {
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 24px;
 }
+.mastery-disclosure > summary {
+  min-width: 44px;
+  min-height: 44px;
+  padding: 8px;
+  cursor: pointer;
+  overflow-wrap: anywhere;
+}
+.mastery-disclosure > summary:focus-visible {
+  outline: 3px solid #254f50;
+  outline-offset: 2px;
+}
+.mastery-disclosure > summary h3 {
+  display: inline;
+}
+.mastery-disclosure > summary > .mastery-counts {
+  display: block;
+  margin-block: 1em;
+}
+.mastery-disclosure > summary > .mastery-show,
+.mastery-disclosure > summary > .mastery-hide {
+  color: #254f50;
+  text-decoration: underline;
+}
+.mastery-disclosure[open] > summary > .mastery-show,
+.mastery-disclosure:not([open]) > summary > .mastery-hide {
+  display: none;
+}
 .mastery-list {
   list-style: none;
   margin: 0;

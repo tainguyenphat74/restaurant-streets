@@ -69,14 +69,32 @@ function StreetSummary({
   );
   return (
     <section aria-label={`${street.name} mastery`}>
-      <h3>
-        {street.name}
-        {!unlocked && ' · Locked'}
-      </h3>
-      <p>
-        {summary.badges} / {summary.total * 3} badges earned ·{' '}
-        {summary.completed} / {summary.total} restaurants complete
-      </p>
+      {/* The unchanged open prop initializes expansion; the browser owns toggles. */}
+      <details className="mastery-disclosure" open>
+        <summary>
+          <h3>
+            {street.name}
+            {!unlocked && ' · Locked'}
+          </h3>
+          <span className="mastery-counts">
+            {summary.badges} / {summary.total * 3} badges earned ·{' '}
+            {summary.completed} / {summary.total} restaurants complete
+          </span>
+          <span className="mastery-show">Show restaurants</span>
+          <span className="mastery-hide">Hide restaurants</span>
+        </summary>
+        {visibleRestaurants.length === 0 && <p>All restaurants mastered.</p>}
+        <ul className="mastery-list">
+          {visibleRestaurants.map((restaurant) => (
+            <MasteryRow
+              key={restaurant.id}
+              restaurant={restaurant}
+              street={street.id}
+              unlocked={unlocked}
+            />
+          ))}
+        </ul>
+      </details>
       {!unlocked && (
         <p>
           Own all six Maple restaurants at level 25 to unlock.{' '}
@@ -89,17 +107,6 @@ function StreetSummary({
           </a>
         </p>
       )}
-      {visibleRestaurants.length === 0 && <p>All restaurants mastered.</p>}
-      <ul className="mastery-list">
-        {visibleRestaurants.map((restaurant) => (
-          <MasteryRow
-            key={restaurant.id}
-            restaurant={restaurant}
-            street={street.id}
-            unlocked={unlocked}
-          />
-        ))}
-      </ul>
     </section>
   );
 }
