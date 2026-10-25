@@ -1,4 +1,6 @@
 import { chromium, expect } from '@playwright/test';
+import { mkdir } from 'node:fs/promises';
+await mkdir('test-results', { recursive: true });
 
 const base = process.env.QA_URL;
 if (!base) throw new Error('Set QA_URL to stable production preview');
@@ -90,7 +92,7 @@ try {
           page.getByText('Street restored.', { exact: true }),
         ).toBeVisible();
         await ui(button('Back to the neighborhood'));
-        await frames();
+        // Restore while Kitchen is mounted has no Phaser scene to settle.
         expect(await exported()).toEqual(value);
         // Explicit tab unmount ensures a fresh local checkbox default.
         await ui(button('Street'));
@@ -309,6 +311,33 @@ try {
       await rows(lockedRemaining, ['Market Gelato']);
       await summaries(12, 2, 3, 1);
       await expect(row('Market Gelato')).toContainText('Not owned');
+      await geometry();
+      await page.screenshot({
+        path: `test-results/mastery-filter-${width}x${height}-partial-imported-Canvas-fixture.png`,
+      });
+      // A validated import updates the mounted filtered overview immediately,
+      // including its completion totals, without resetting the local checkbox.
+      const advanced = structuredClone(partial);
+      advanced.restaurants.sushi_station.level = 100;
+      await ui(button('Settings'));
+      await page
+        .getByLabel('Import a saved street')
+        .fill(JSON.stringify(advanced));
+      await ui(button('Restore save'));
+      await expect(
+        page.getByText('Street restored.', { exact: true }),
+      ).toBeVisible();
+      await ui(button('Back to the neighborhood'));
+      await expect(checkbox).toBeChecked();
+      await rows(
+        ['Coffee Corner', 'Taco Tuesday', 'Tomato & Basil'],
+        ['Market Gelato'],
+      );
+      await summaries(13, 3, 3, 1);
+      expect(await exported()).toEqual(advanced);
+      await restore(partial);
+      await toggle(true);
+      await rows(lockedRemaining, ['Market Gelato']);
       const onRiver = structuredClone(partial);
       onRiver.neighborhood.currentStreet = 'riverside_market';
       await visit('Market Gelato', 'RIVERSIDE MARKET', onRiver);
