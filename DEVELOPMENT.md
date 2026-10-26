@@ -1,5 +1,10 @@
 # Restaurant Streets — Development Log
 
+## Next badge bulk upgrade — in progress
+
+- One bounded purchasing-convenience release from `a9ee88c`. Parent exclusive lock PID2588670 untouched. No servers, publication, pricing/income/save changes. Canonical mastery targets 25/50/100; sequential costs and milestone gems only.
+- Actual regression-first unit RED: **16 failed / 5 passed**, including River Grill level24 quote expected1/received0 (`/tmp/rs-badge-unit-red.log`). Actual unchanged public production RED: successful1440×900 boot and exact supported v4 Restore/export, then native Next badge button expected1/received0 after5000ms (`/tmp/rs-badge-browser-red.log`). Initial browser attempt exposed ambiguous Visit locator; scoped to Kitchen card and reran to intended RED. Parent owns independent review, stable-preview browser GREEN, final tests and fresh WebGL/live gates. Imported frozen Canvas fixtures remain separate from fresh gameplay.
+
 ## Riverside unlock-goal inspection — live
 
 - Scoped from clean main `3bb6075` under parent exclusive lock PID2577329 (untouched): local native Hide completed unlock goals checkbox, keyed prerequisite rows and named clamped native row progress. Whole goal and existing Visit/Unlock behavior stay intact; no game/economy/save/scene/config/dependency changes.
