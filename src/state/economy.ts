@@ -64,8 +64,10 @@ export function income(g: GameData, id: string, now: number) {
         (rating(r.level) / 4) *
         (g.boostUntil > now ? 2 : 1) *
         honorMultiplier(g, id) *
-        // Continuous +1 percentage point per level after 50, capped at +50%.
-        (1 + Math.min(50, Math.max(0, r.level - 50)) / 100) *
+        // Original ramp through 75; a second additive ramp caps total at +75%.
+        (1 +
+          Math.min(50, Math.max(0, r.level - 50)) / 100 +
+          Math.min(25, Math.max(0, r.level - 75)) / 100) *
         masterIncomeMultiplier(r.owned, r.level)
     : 0;
 }
