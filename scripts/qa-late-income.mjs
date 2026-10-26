@@ -35,9 +35,13 @@ try {
     await page.clock.runFor(1000);
     await page.waitForFunction(() => window.restaurantQA?.().scene.ready);
     const template = await read();
-    async function restore(level, managed = false) {
+    async function restore(level, managed = false, boosted = false) {
       const data = structuredClone(template);
-      Object.assign(data, { coins: 100000, gems: 42 });
+      Object.assign(data, {
+        coins: 100000,
+        gems: 42,
+        boostUntil: boosted ? (await now()) + 60000 : 0,
+      });
       Object.assign(data.restaurants.noodle_nook, {
         level,
         hasManager: managed,
@@ -58,7 +62,7 @@ try {
         page.getByText('Street restored.', { exact: true }),
       ).toBeVisible();
       await activate(button('Back to the neighborhood'));
-      expect(await read()).toEqual(data);
+      expect(await exported()).toEqual(fixture);
       return fixture;
     }
     async function exported() {
@@ -71,16 +75,24 @@ try {
       return save;
     }
     async function measure(rate, managed = false) {
-      const a = await read();
+      const a = await exported();
       const start = await now();
       await page.clock.runFor(2000);
-      const b = await read();
+      const b = await exported();
       const seconds = ((await now()) - start) / 1000;
       const earned = managed
         ? b.coins - a.coins
         : b.restaurants.noodle_nook.register -
           a.restaurants.noodle_nook.register;
       expect(earned / seconds).toBeCloseTo(rate, 5);
+      // Assert every saved field exactly, except measured earnings and elapsed timestamp.
+      const expected = structuredClone(a);
+      expected.savedAt = await now();
+      if (managed) expected.coins = b.coins;
+      else
+        expected.restaurants.noodle_nook.register =
+          b.restaurants.noodle_nook.register;
+      expect(b).toEqual(expected);
     }
     const fixture = await restore(50);
     await measure(500);
@@ -90,7 +102,7 @@ try {
       exact: true,
     });
     await expect(help).toContainText('1 percentage point per level after 50');
-    await expect(help).toContainText('capped at +50% at level 100');
+    await expect(help).toContainText('capped at +75% at level 100');
     const visit = page.getByRole('button', {
       name: 'Visit restaurant ↗',
       exact: true,
@@ -126,10 +138,22 @@ try {
     await expect(button('Kitchen')).toBeVisible();
     expect(await exported()).toEqual(save);
     await measure(515.1);
-    await restore(100);
-    await measure(3300);
-    await restore(101, true);
-    await measure(3333, true);
+    for (const [level, rate] of [
+      [75, 937.5],
+      [76, 965.2],
+      [90, 1395],
+      [100, 3850],
+      [101, 3888.5],
+    ]) {
+      for (const managed of [false, true]) {
+        for (const boosted of [false, true]) {
+          const restored = await restore(level, managed, boosted);
+          await page.reload();
+          expect(await exported()).toEqual(restored);
+          await measure(rate * (boosted ? 2 : 1), managed);
+        }
+      }
+    }
     await activate(button('Kitchen'));
     await expect(help).toBeVisible();
     expect(
@@ -143,7 +167,7 @@ try {
     });
     expect(errors).toEqual([]);
     console.log(
-      `PASS late income ${mobile ? 'mobile taps' : 'desktop keyboard'}: supported fixtures, 50→51 actual upgrade, measured 500/515.1/3300/3333 rates, register/manager, exact export/reload, disclosure, overflow, zero page errors`,
+      `PASS late income ${mobile ? 'mobile taps' : 'desktop keyboard'}: supported fixtures, 50→51 actual upgrade, measured 500/515.1 and 75/76/90/100/101 rates, register/manager, exact export/reload, disclosure, overflow, zero page errors`,
     );
     await context.close();
   }

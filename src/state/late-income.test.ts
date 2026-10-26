@@ -19,10 +19,10 @@ it.each([
   [50, 500],
   [51, 515.1],
   [75, 937.5],
-  [99, 1475.1],
-  [100, 3300],
-  [101, 3333],
-  [1000, 33000],
+  [99, 1712.7],
+  [100, 3850],
+  [101, 3888.5],
+  [1000, 38500],
 ])('has independent Noodle income at level %s', (level, expected) => {
   const g = fresh();
   g.restaurants.noodle_nook.level = level;
@@ -59,10 +59,12 @@ it('preserves every early level and is finite and bounded for every restaurant t
       const rate = income(g, c.id, 0);
       expect(Number.isFinite(rate)).toBe(true);
       expect(rate).toBeGreaterThanOrEqual(old);
-      expect(rate).toBeLessThanOrEqual(old * 1.5 * (level >= 100 ? 1.1 : 1));
+      expect(rate).toBeLessThanOrEqual(old * 1.75 * (level >= 100 ? 1.1 : 1));
       expect(rate).toBe(
         old *
-          (1 + Math.min(50, Math.max(0, level - 50)) / 100) *
+          (1 +
+            Math.min(50, Math.max(0, level - 50)) / 100 +
+            Math.min(25, Math.max(0, level - 75)) / 100) *
           (level >= 100 ? 1.1 : 1),
       );
       if (level <= 50) expect(rate).toBe(old);
@@ -78,8 +80,8 @@ it('composes once with globals, honors, registers, managers, partial boosts and 
       Object.assign(r, { owned: true, level: 100 });
   }
   g.upgrades = ['ingredients', 'service'];
-  // Existing 13,500/s stacks with the separate 1.1 Master multiplier.
-  const rate = 13500 * 1.1;
+  // Existing 15,750/s stacks with the separate 1.1 Master multiplier.
+  const rate = 15750 * 1.1;
   expect(income(g, 'noodle_nook', 0)).toBe(rate);
   const tick = accrue(g, 0, 2000).data;
   expect(tick.restaurants.noodle_nook.register).toBe(rate * 2);
@@ -146,7 +148,7 @@ it.each([1, 2, 3, 4])(
       savedAt: 1000,
       pendingOffline: 234,
     });
-    expect(income(parsed, 'noodle_nook', 1000)).toBe(12000 * 1.1);
+    expect(income(parsed, 'noodle_nook', 1000)).toBe(14000 * 1.1);
     expect(parseSave(serialize(parsed, 1000, 234))).toEqual(parsed);
   },
 );

@@ -30,8 +30,9 @@ export function KitchenTab() {
         </p>
         <p>
           Each restaurant gains an extra 1 percentage point per level after 50,
-          capped at +50% at level 100 and beyond. This multiplies with
-          milestones, Street Honors, global upgrades and rush hour.
+          plus another 1 percentage point per level after 75, capped at +75% at
+          level 100 and beyond. This multiplies with milestones, Street Honors,
+          global upgrades and rush hour.
         </p>
         <Button onClick={() => setTab('Upgrades')}>
           Open upgrades and boosts

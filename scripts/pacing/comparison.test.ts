@@ -70,10 +70,10 @@ it('continues reproducible earned checkpoints with bounded policies and gem budg
     }
     expect(run.seconds).toBeCloseTo(
       {
-        baseline: 670369.19248,
-        globals: 225253.1046,
-        boosts: 216253.10475,
-        offline: 394869.58702,
+        baseline: 603110.0250305176,
+        globals: 202833.38190917968,
+        boosts: 193833.38220581054,
+        offline: 359408.51094921876,
       }[policy],
       2,
     );
@@ -89,10 +89,10 @@ it('continues reproducible earned checkpoints with bounded policies and gem budg
     );
     expect(run.seconds).toBeLessThan(
       {
-        baseline: 950393.26194,
-        globals: 318594.461,
-        boosts: 309594.46009,
-        offline: 585895.14528,
+        baseline: 670369.192482666,
+        globals: 225253.1046027832,
+        boosts: 216253.10474951172,
+        offline: 394869.5870212402,
       }[policy],
     );
     expect(run.seconds).toBeGreaterThan(result.shared.seconds);

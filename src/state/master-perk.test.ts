@@ -18,7 +18,7 @@ it('earns only the individual Master multiplier at an actual 99→100 purchase',
   g.gems = 23;
   const before = structuredClone(g);
   const other = income(g, 'coffee_corner', 0);
-  expect(income(g, 'noodle_nook', 0)).toBeCloseTo(1475.1, 8);
+  expect(income(g, 'noodle_nook', 0)).toBeCloseTo(1712.7, 8);
   const next = levelUp(g, 'noodle_nook');
   expect(next).toEqual({
     ...g,
@@ -29,7 +29,7 @@ it('earns only the individual Master multiplier at an actual 99→100 purchase',
       noodle_nook: { ...g.restaurants.noodle_nook, level: 100 },
     },
   });
-  expect(income(next, 'noodle_nook', 0)).toBe(3000 * 1.1);
+  expect(income(next, 'noodle_nook', 0)).toBe(3500 * 1.1);
   expect(income(next, 'coffee_corner', 0)).toBe(other);
   expect(income(next, 'river_grill', 0)).toBe(0);
   expect(g).toEqual(before);
@@ -38,7 +38,7 @@ it('earns only the individual Master multiplier at an actual 99→100 purchase',
 it('routes Master once through registers, managers, partial boosts and offline', () => {
   const g = fresh();
   g.restaurants.noodle_nook.level = 100;
-  const rate = 3000 * 1.1;
+  const rate = 3500 * 1.1;
   expect(accrue(g, 0, 2000).data.restaurants.noodle_nook.register).toBe(
     rate * 2,
   );

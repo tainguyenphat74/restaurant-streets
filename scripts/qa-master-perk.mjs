@@ -168,10 +168,10 @@ try {
         await page.reload();
         await page.clock.runFor(1000);
         expect(await exported()).toEqual(after);
-        await measure(id, managed, 3300);
+        await measure(id, managed, 3850);
         // Independently check unchanged pre-Master income under the same fixture.
         await restore(id, 99, managed);
-        await measure(id, managed, 1475.1);
+        await measure(id, managed, 1712.7);
       }
     }
     async function measure(id, managed, targetRate) {
