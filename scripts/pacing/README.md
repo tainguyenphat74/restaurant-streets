@@ -51,7 +51,7 @@ human schedules, optimal boost timing, save lifecycle or proposed balance change
 ## Bounded late income tuning (local release, 2026-10-19)
 
 The table above records the pre-tuning run on `25ea26a`, reproduced before edits.
-Canonical restaurant income now multiplies by `1 + clamp(level - 50, 0, 50) / 100`:
+At that historical release, canonical restaurant income multiplied by `1 + clamp(level - 50, 0, 50) / 100`:
 unchanged through 50, +1% at 51, +25% at 75, +50% at 100 and thereafter.
 This continuous bounded ramp avoids a new threshold reward or runaway scaling;
 it composes once with existing milestones, honors, globals and boosts. Costs,
@@ -78,7 +78,7 @@ late balance is finished. This historical run predates the individual Master per
 ## Individual Master income perk
 
 Owned restaurants at level 100 or above now receive an automatic individual
-+10% income multiplier. Income below 100 is unchanged. The same simulator and
++10% income multiplier. That release left income below 100 unchanged. The same simulator and
 four earned policies produced these actual cumulative both-100 seconds:
 
 | Policy                                   | Before Master perk |  After Master perk |
@@ -101,3 +101,22 @@ All collection limits, earned-funds/gem constraints, target caps, global purchas
 order, boost expiry rules and one-hour-active/eight-hours-offline scheduling above
 are unchanged. These are deterministic policy outputs, not optimal strategies or
 player metrics; no human latency or save-claim lifecycle is simulated.
+
+## Secondary late tail (local, parent review/browser/live pending)
+
+The original ramp is exact through level 75. Above 75, a second additive
+percentage point per level reaches +0.25 at 100: total late multiplier 1.75,
+capped thereafter. The individual Master multiplier still applies once.
+Costs, rewards, caps, save schema and policy rules are unchanged.
+
+| Policy | Before both-100 seconds | After both-100 seconds |
+| --- | ---: | ---: |
+| Baseline | 670369.192482666 | 603110.0250305176 |
+| Globals | 225253.1046027832 | 202833.38190917968 |
+| Earned boosts | 216253.10474951172 | 193833.38220581054 |
+| Bounded offline | 394869.5870212402 | 359408.51094921876 |
+
+Both-25 and both-50 checkpoints, boosts/gems and manager readiness remain
+exactly unchanged from the preceding table. Offline time is now 316800 seconds
+(previously 345600). These deterministic simulated policies are not human
+completion metrics or optimality claims; discrete offline scheduling still matters.
