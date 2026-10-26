@@ -16,14 +16,6 @@ const ids = [
   'tomato_basil',
   'sushi_station',
 ];
-const names = [
-  'Noodle Nook',
-  'Coffee Corner',
-  'Sunny Bakery',
-  'Taco Tuesday',
-  'Tomato & Basil',
-  'Sushi Station',
-];
 const browser = await chromium.launch({
   args: ['--no-sandbox', '--disable-webgl'],
 });
@@ -254,6 +246,13 @@ try {
           );
         if (count) await activate(upgrade);
         else await expect(upgrade).toBeDisabled();
+        if (r.level < target) await expect(upgrade).toBeDisabled();
+        if (r.level === target && target < 100) {
+          await expect(page.locator('.badge-target')).toContainText(
+            target === 25 ? 'Artisan at level 50' : 'Master at level 100',
+          );
+          await expect(badge).toHaveAttribute('aria-pressed', 'true');
+        }
         if (r.level === 100) {
           await expect(badge).toBeDisabled();
           await expect(upgrade).toBeDisabled();
@@ -297,6 +296,25 @@ try {
           await purchase(id, name, save, 25);
         }
       }
+      save = fixture('noodle_nook', 1000, 1e90);
+      await restore(save);
+      await open('Noodle Nook');
+      await expect(badge).toBeDisabled();
+      await expect(upgrade).toBeDisabled();
+      expect(await exported()).toEqual(save);
+      // Locked Riverside remains inspectable in Kitchen but cannot be visited.
+      const locked = page.getByRole('region', {
+        name: 'Riverside Market mastery',
+        exact: true,
+      });
+      const disclosure = locked.locator('summary');
+      if (!(await locked.locator('details').evaluate((el) => el.open)))
+        await ui(disclosure);
+      await expect(
+        locked.getByRole('button', { name: 'Visit River Grill', exact: true }),
+      ).toHaveCount(0);
+      await expect(locked).toContainText('Locked');
+      expect(await exported()).toEqual(save);
       expect(errors).toEqual([]);
       console.log(
         `PASS badge ${width}x${height}: native keyboard/touch, 44px hit tests, partial/zero, 25→50→100, other modes, both streets/reload/exact full saves; imported frozen Canvas`,

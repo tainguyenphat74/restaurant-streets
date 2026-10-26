@@ -1,8 +1,9 @@
+import { restaurantMastery } from './mastery';
 import { restaurantAvailable } from './riverside';
 import { restaurants } from '../data/restaurants';
 import { milestones, upgradeCost, type GameData } from './economy';
 
-export type BuyMode = '1' | '10' | 'milestone' | 'max';
+export type BuyMode = '1' | '10' | 'milestone' | 'badge' | 'max';
 export const nextMilestone = (level: number) =>
   milestones.find((m) => m > level);
 
@@ -37,9 +38,11 @@ function simulate(g: GameData, id: string, mode: BuyMode) {
         ? 10
         : mode === 'milestone'
           ? (nextMilestone(r.level) ?? r.level) - r.level
-          : mode === 'max'
-            ? 1000 - r.level
-            : 0;
+          : mode === 'badge'
+            ? Math.max(0, restaurantMastery(r.owned, r.level).target - r.level)
+            : mode === 'max'
+              ? 1000 - r.level
+              : 0;
   for (let i = 0; i < Math.min(limit, 1000 - r.level); i++) {
     const price =
       r.owned || count > 0 ? upgradeCost(id, r.level + count) : config.baseCost;

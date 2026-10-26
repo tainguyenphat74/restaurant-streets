@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { restaurantMastery } from '../state/mastery';
 import { RestaurantMastery } from './RestaurantMastery';
 import { quoteLevels, nextMilestone, type BuyMode } from '../state/bulk';
 import { useShallow } from 'zustand/react/shallow';
@@ -53,6 +54,7 @@ function SelectedRestaurant({ selected }: { selected: string }) {
     [selected, mode, coins, gems, r.level, r.owned],
   );
   const target = nextMilestone(r.level);
+  const mastery = restaurantMastery(r.owned, r.level);
   const close = () => {
     select(null);
     // Prefer the live plot, then the still-mounted Kitchen opener. A newly
@@ -132,13 +134,18 @@ function SelectedRestaurant({ selected }: { selected: string }) {
                 ['1', 'Buy 1'],
                 ['10', 'Buy 10'],
                 ['milestone', 'Next milestone'],
+                ['badge', 'Next badge'],
                 ['max', 'Buy max'],
               ] as const
             ).map(([value, label]) => (
               <button
                 key={value}
                 aria-pressed={mode === value}
-                disabled={r.level >= 1000 || (value === 'milestone' && !target)}
+                disabled={
+                  r.level >= 1000 ||
+                  (value === 'milestone' && !target) ||
+                  (value === 'badge' && !mastery.target)
+                }
                 onClick={() => setMode(value)}
               >
                 {label}
@@ -152,9 +159,24 @@ function SelectedRestaurant({ selected }: { selected: string }) {
             {quote.count === 0 &&
               r.level < 1000 &&
               (mode !== 'milestone' || target) &&
+              (mode !== 'badge' || mastery.target) &&
               ' · Insufficient coins'}
           </p>
           <small>Buys up to the affordable quantity.</small>
+          {mode === 'badge' && (
+            <p className="badge-target" aria-live="polite">
+              {mastery.target ? (
+                <>
+                  Next badge: {mastery.next} at level {mastery.target}. Buys
+                  affordable levels up to this badge.
+                  {r.level + quote.count < mastery.target &&
+                    ' Partial purchase: more coins are needed to reach this badge.'}
+                </>
+              ) : (
+                'All badges earned · Mastery complete at level 100.'
+              )}
+            </p>
+          )}
           <div className="milestone-progress">
             {target ? (
               <>
