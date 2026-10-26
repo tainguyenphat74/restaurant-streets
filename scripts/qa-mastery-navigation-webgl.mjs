@@ -75,7 +75,11 @@ try {
         }),
       );
       await expect(search).toBeFocused();
-      await overview.screenshot({
+      // Viewport capture avoids a fixed header painted into a tall element crop.
+      await shortcuts.evaluate((el) =>
+        el.scrollIntoView({ block: 'center', inline: 'nearest' }),
+      );
+      await page.screenshot({
         path: `test-results/mastery-navigation-${mobile ? 'mobile' : 'desktop'}-fresh-WebGL.png`,
       });
       await activate(
