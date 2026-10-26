@@ -285,9 +285,21 @@ try {
       await rows([25, 25, 25, 25, 25, 25]);
       await expect(goal.getByRole('status')).toHaveCount(0);
       await toggle(true);
+      // A backwards mounted Restore must revive previously hidden row components.
+      await restore(advanced);
+      await expect(filter).toBeChecked();
+      await rows([25, 1000, 24, 25, 0, 26], true);
+      await expect(goal.getByRole('status')).toHaveCount(0);
+      await expect(button('Unlock Riverside Market')).toBeDisabled();
+      await layout(filter.locator('..'));
+      await page.screenshot({
+        path: `test-results/riverside-goals-imported-${width}.png`,
+      });
+      await restore(complete);
       const unlocked = structuredClone(complete);
       unlocked.neighborhood.unlockedStreets.push('riverside_market');
-      await restore(unlocked);
+      await ui(button('Unlock Riverside Market'));
+      expect(await exported()).toEqual(unlocked);
       await expect(filter).toBeChecked();
       await expect(button('✓ Riverside unlocked')).toBeDisabled();
       await layout(button('Visit Riverside Market ↗'));
@@ -295,6 +307,20 @@ try {
         'All unlock goals complete.',
       );
       expect(await exported()).toEqual(unlocked);
+      await ui(button('Visit Riverside Market ↗'));
+      await frames();
+      const visited = structuredClone(unlocked);
+      visited.neighborhood.currentStreet = 'riverside_market';
+      await expect(button('Street')).toHaveAttribute('aria-current', 'page');
+      await expect(
+        page.getByRole('region', { name: 'Riverside Market map', exact: true }),
+      ).toBeVisible();
+      expect(await exported()).toEqual(visited);
+      await ui(button('Kitchen'));
+      await expect(filter).not.toBeChecked();
+      // Return to the exact original navigation field for subsequent equality gates.
+      await restore(unlocked);
+      await toggle(true);
       await ui(button('Upgrades'));
       await ui(button('Kitchen'));
       await expect(filter).not.toBeChecked();
