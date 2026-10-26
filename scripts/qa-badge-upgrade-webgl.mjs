@@ -50,6 +50,9 @@ try {
       );
       await expect(page.locator('.bulk-quote')).toContainText('1 level');
       const before = await page.evaluate(() => window.restaurantQA().data);
+      // Fail explicitly if a stalled runner collected beyond the one-level fixture.
+      expect(before.coins).toBeGreaterThanOrEqual(11.5);
+      expect(before.coins).toBeLessThan(11.5 + 10 * 1.15 ** 2);
       await activate(page.getByRole('button', { name: /^Upgrade restaurant/ }));
       const after = await page.evaluate(() => window.restaurantQA().data);
       expect(before.restaurants.noodle_nook.level).toBe(1);

@@ -16,6 +16,16 @@ const ids = [
   'tomato_basil',
   'sushi_station',
 ];
+const format = (n) => {
+  for (const [size, suffix] of [
+    [1e9, 'B'],
+    [1e6, 'M'],
+    [1e3, 'K'],
+  ]) {
+    if (n >= size) return (n / size).toFixed(1).replace(/\.0$/, '') + suffix;
+  }
+  return n.toLocaleString('en-US', { maximumFractionDigits: 1 });
+};
 const browser = await chromium.launch({
   args: ['--no-sandbox', '--disable-webgl'],
 });
@@ -86,8 +96,9 @@ try {
         // Kitchen exposes native Visit controls even while scene frames are paused.
         await ui(
           page
-            .locator('.card-grid')
-            .getByRole('button', { name: `Visit ${name}`, exact: true }),
+            .locator('.card-grid .card')
+            .filter({ has: page.getByRole('heading', { name, exact: true }) })
+            .getByRole('button', { name: 'Visit restaurant ↗', exact: true }),
         );
       }
       async function layout(target) {
@@ -229,10 +240,13 @@ try {
         const r = expected.restaurants[id];
         const baseCost = id === 'river_grill' ? 12000000 : 10;
         let count = 0;
+        let totalCost = 0;
+        const initialGems = expected.gems;
         while (r.level < target) {
           const cost = baseCost * 1.15 ** r.level;
           if (expected.coins < cost) break;
           expected.coins -= cost;
+          totalCost += cost;
           r.level++;
           count++;
           if ([10, 25, 50, 100].includes(r.level)) expected.gems += 5;
@@ -240,6 +254,15 @@ try {
         await expect(page.locator('.bulk-quote')).toContainText(
           `${count} level`,
         );
+        await expect(page.locator('.bulk-quote')).toContainText(
+          `🪙 ${format(totalCost)}`,
+        );
+        if (expected.gems > initialGems)
+          await expect(page.locator('.bulk-quote')).toContainText(
+            `+${expected.gems - initialGems} gems`,
+          );
+        else
+          await expect(page.locator('.bulk-quote')).not.toContainText('gems');
         if (r.level < target)
           await expect(page.locator('.badge-target')).toContainText(
             'Partial purchase',
@@ -269,7 +292,7 @@ try {
         }
         await layout(button('Buy 1'));
         await page.screenshot({
-          path: `test-results/badge-imported-fixture-${width}-${id}-${target}.png`,
+          path: `test-results/badge-imported-fixture-${width}-${id}-${target}-${before.coins}.png`,
         });
         expect(await exported()).toEqual(expected);
         return expected;
@@ -283,10 +306,19 @@ try {
         await restore(save);
         for (const target of [25, 50, 100])
           save = await purchase(id, name, save, target);
-        // Reload with frozen wall clock and frames only to boot Street.
+        // Reload boots Street and accrues a zero-time tick. Existing managers
+        // legitimately sweep retained registers even with wall time frozen;
+        // purchase equality above proves the upgrade itself preserved them.
+        const afterReload = structuredClone(save);
+        for (const restaurant of Object.values(afterReload.restaurants)) {
+          if (restaurant.owned && restaurant.hasManager) {
+            afterReload.coins += restaurant.register;
+            restaurant.register = 0;
+          }
+        }
         await page.reload();
         await frames();
-        expect(await exported()).toEqual(save);
+        expect(await exported()).toEqual(afterReload);
         for (const coins of [
           0,
           (id === 'river_grill' ? 12000000 : 10) * 1.15 ** 9 * 2.2,

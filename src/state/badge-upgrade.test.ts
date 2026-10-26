@@ -71,6 +71,29 @@ for (const id of ['noodle_nook', 'river_grill']) {
     });
   }
 }
+it('matches sequential purchases at and just below a multi-level aggregate budget', () => {
+  for (const id of ['noodle_nook', 'river_grill']) {
+    const total = [9, 10, 11].reduce(
+      (sum, level) => sum + upgradeCost(id, level),
+      0,
+    );
+    for (const coins of [total, total - upgradeCost(id, 9) * 1e-9]) {
+      const g = fixture(id, 9, coins);
+      let expected = g;
+      for (let n = 9; n < 25; n++) {
+        const next = levelUp(expected, id);
+        if (next === expected) break;
+        expected = next;
+      }
+      expect(buyLevels(g, id, 'badge')).toEqual(expected);
+      expect(quoteLevels(g, id, 'badge').count).toBe(
+        expected.restaurants[id].level - 9,
+      );
+      expect(expected.restaurants[id].level).toBeLessThanOrEqual(12);
+      if (coins < total) expect(expected.restaurants[id].level).toBe(11);
+    }
+  }
+});
 it('crosses both 10 and 25 once; progresses to 50 and 100; other modes still work', () => {
   let g = fixture('noodle_nook', 9, 1e30);
   for (const [level, gems] of [
