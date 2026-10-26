@@ -11,6 +11,20 @@ import { Button } from './components/Button';
 
 type Neighborhood = (typeof neighborhoods)[number];
 
+const summaryId = (street: StreetId) => `mastery-summary-${street}`;
+
+function focusMasteryTarget(target: HTMLElement | null) {
+  if (!target) return;
+  target.focus({ preventScroll: true });
+  // Measure the responsive fixed header, including short landscape layouts.
+  const headerBottom =
+    document.querySelector('.topbar')?.getBoundingClientRect().bottom ?? 0;
+  window.scrollBy({
+    top: target.getBoundingClientRect().top - headerBottom - 8,
+    behavior: 'instant',
+  });
+}
+
 const resultsId = (street: StreetId) => `mastery-results-${street}`;
 
 export const KitchenMastery = memo(function KitchenMastery() {
@@ -89,6 +103,26 @@ export const KitchenMastery = memo(function KitchenMastery() {
           Reset mastery view
         </Button>
       )}
+      <nav className="mastery-shortcuts" aria-label="Mastery street shortcuts">
+        {neighborhoods.map((street) => (
+          <a
+            key={street.id}
+            className="mastery-navigation-link"
+            href={`#${summaryId(street.id)}`}
+            onClick={(event) => {
+              event.preventDefault();
+              const target = document.getElementById(summaryId(street.id));
+              const disclosure = target?.parentElement;
+              if (disclosure instanceof HTMLDetailsElement) {
+                disclosure.open = true;
+                focusMasteryTarget(target);
+              }
+            }}
+          >
+            {street.name} mastery
+          </a>
+        ))}
+      </nav>
       <div className="mastery-streets">
         {neighborhoods.map((street) => (
           <StreetSummary
@@ -97,6 +131,7 @@ export const KitchenMastery = memo(function KitchenMastery() {
             hideCompleted={hideCompleted}
             nearestFirst={nearestFirst}
             query={query}
+            onBackToSearch={() => focusMasteryTarget(searchInput.current)}
           />
         ))}
       </div>
@@ -109,11 +144,13 @@ function StreetSummary({
   hideCompleted,
   nearestFirst,
   query,
+  onBackToSearch,
 }: {
   street: Neighborhood;
   hideCompleted: boolean;
   nearestFirst: boolean;
   query: string;
+  onBackToSearch: () => void;
 }) {
   // Shallow numeric results exclude register, currency and clock changes.
   const summary = useGame(
@@ -153,7 +190,7 @@ function StreetSummary({
       </p>
       {/* The unchanged open prop initializes expansion; the browser owns toggles. */}
       <details className="mastery-disclosure" open>
-        <summary>
+        <summary id={summaryId(street.id)}>
           <span className="mastery-street-name" role="heading" aria-level={3}>
             {street.name}
             {!unlocked && ' · Locked'}
@@ -184,6 +221,16 @@ function StreetSummary({
             />
           ))}
         </ul>
+        <a
+          className="mastery-navigation-link"
+          href="#mastery-search-input"
+          onClick={(event) => {
+            event.preventDefault();
+            onBackToSearch();
+          }}
+        >
+          Back to mastery search
+        </a>
       </details>
       {!unlocked && (
         <p>
