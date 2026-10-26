@@ -98,6 +98,16 @@ it('continues reproducible earned checkpoints with bounded policies and gem budg
     expect(run.seconds).toBeGreaterThan(result.shared.seconds);
     expect(run.seconds).toBeLessThan(365 * 86400);
     expect(run.data.gems + run.boosts * 10).toBe(160);
+    expect(run.boosts).toBe(
+      policy === 'boosts' || policy === 'offline' ? 15 : 0,
+    );
+    expect(run.data.gems).toBe(
+      policy === 'boosts' || policy === 'offline' ? 10 : 160,
+    );
+    expect(run.offlineSeconds).toBe(policy === 'offline' ? 316800 : 0);
+    expect(run.managerReadySeconds).toBe(
+      policy === 'offline' ? 2695.1452841796877 : 0,
+    );
     expect(run.data.coins).toBeGreaterThanOrEqual(0);
     expect(Number.isFinite(run.data.coins)).toBe(true);
     expect(
