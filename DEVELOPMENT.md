@@ -1,5 +1,10 @@
 # Restaurant Streets — Development Log
 
+## Riverside unlock-goal inspection — in progress
+
+- Scoped from clean main `3bb6075` under parent exclusive lock PID2577329 (untouched): local native Hide completed unlock goals checkbox, keyed prerequisite rows and named clamped native row progress. Whole goal and existing Visit/Unlock behavior stay intact; no game/economy/save/scene/config/dependency changes.
+- Regression-first `scripts/qa-riverside-goals.mjs`: actual `QA_URL=https://restaurant-streets.tainguyenphat.com node scripts/qa-riverside-goals.mjs` exits 1 after successful 1440×900 boot and exact supported v4 import/export. Missing native checkbox assertion: expected 1, received 0 (5000ms); captured `/tmp/rs-goals-red.log`. Remaining matrix assertions are not yet browser-verified. Focused UI/README implementation follows. Parent owns independent review, stable final-dist browser GREEN and publication; no servers or publication by this worker.
+
 ## Secondary positive late-income tail — live
 
 - Baseline clean `fa7de0b` on main. Parent exclusive release lock PID2554018 left untouched. No servers, browser execution, push or deployment by Codex; parent owns final review and stable-artifact browser/live gates.
