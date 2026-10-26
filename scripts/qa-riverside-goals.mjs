@@ -60,14 +60,12 @@ try {
         exact: true,
       });
       const row = (i) =>
-        goal
-          .getByRole('listitem')
-          .filter({
-            has: page.getByRole('button', {
-              name: `Visit ${names[i]}`,
-              exact: true,
-            }),
-          });
+        goal.getByRole('listitem').filter({
+          has: page.getByRole('button', {
+            name: `Visit ${names[i]}`,
+            exact: true,
+          }),
+        });
       const summary = goal.getByRole('progressbar', {
         name: 'Riverside goal completion',
         exact: true,

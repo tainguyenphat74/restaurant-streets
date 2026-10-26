@@ -1,3 +1,4 @@
+import { memo, useState } from 'react';
 import { mapleRestaurants } from '../data/maple';
 import {
   riversideCompleted,
@@ -9,7 +10,8 @@ import { useGame } from '../state/store';
 import { Card } from './components/Card';
 import { Button } from './components/Button';
 
-export function RiversideGoal() {
+export const RiversideGoal = memo(function RiversideGoal() {
+  const [hideCompleted, setHideCompleted] = useState(false);
   const unlocked = useGame((s) =>
     s.data.neighborhood.unlockedStreets.includes('riverside_market'),
   );
@@ -56,18 +58,36 @@ export function RiversideGoal() {
           Visit Riverside Market ↗
         </Button>
       )}
+      <label className="mastery-filter">
+        <input
+          type="checkbox"
+          checked={hideCompleted}
+          onChange={(event) => setHideCompleted(event.target.checked)}
+        />
+        <span>Hide completed unlock goals</span>
+      </label>
+      {hideCompleted && completed === riversideGoalIds.length && (
+        <p role="status">All unlock goals complete.</p>
+      )}
       <ul className="riverside-list">
         {riversideGoalIds.map((id) => (
-          <GoalRow key={id} id={id} />
+          <GoalRow key={id} id={id} hideCompleted={hideCompleted} />
         ))}
       </ul>
     </Card>
   );
-}
-function GoalRow({ id }: { id: (typeof riversideGoalIds)[number] }) {
+});
+const GoalRow = memo(function GoalRow({
+  id,
+  hideCompleted,
+}: {
+  id: (typeof riversideGoalIds)[number];
+  hideCompleted: boolean;
+}) {
   const level = useGame((s) => riversideLevel(s.data, id));
   const select = useGame((s) => s.select);
   const restaurant = mapleRestaurants.find((r) => r.id === id)!;
+  if (hideCompleted && level >= riversideTarget) return null;
   return (
     <li>
       <div>
@@ -80,6 +100,11 @@ function GoalRow({ id }: { id: (typeof riversideGoalIds)[number] }) {
           {riversideTarget}
           {level >= riversideTarget ? ' · Complete' : ''}
         </span>
+        <progress
+          aria-label={`${restaurant.name} unlock goal progress`}
+          value={Math.min(level, riversideTarget)}
+          max={riversideTarget}
+        />
       </div>
       <Button
         className="secondary"
@@ -90,4 +115,4 @@ function GoalRow({ id }: { id: (typeof riversideGoalIds)[number] }) {
       </Button>
     </li>
   );
-}
+});
