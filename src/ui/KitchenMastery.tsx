@@ -2,6 +2,10 @@ import { memo, useRef, useState } from 'react';
 import { useShallow } from 'zustand/react/shallow';
 import { neighborhoods } from '../data/neighborhoods';
 import { restaurantMastery } from '../state/mastery';
+import {
+  masteryBadgeFilter,
+  type MasteryBadgeFilter,
+} from '../state/mastery-badge-filter';
 import { masteryOrder } from '../state/mastery-order';
 import { masterySearch } from '../state/mastery-search';
 import { masterySummary } from '../state/mastery-summary';
@@ -30,6 +34,7 @@ const resultsId = (street: StreetId) => `mastery-results-${street}`;
 export const KitchenMastery = memo(function KitchenMastery() {
   const [hideCompleted, setHideCompleted] = useState(false);
   const [nearestFirst, setNearestFirst] = useState(false);
+  const [badge, setBadge] = useState<MasteryBadgeFilter>('all');
   const [query, setQuery] = useState('');
   const searchInput = useRef<HTMLInputElement>(null);
   return (
@@ -68,6 +73,25 @@ export const KitchenMastery = memo(function KitchenMastery() {
           </Button>
         )}
       </div>
+      <div className="mastery-search">
+        <label htmlFor="mastery-badge-filter">Next badge</label>
+        <select
+          id="mastery-badge-filter"
+          value={badge}
+          aria-describedby="mastery-badge-help"
+          onChange={(event) =>
+            setBadge(event.target.value as MasteryBadgeFilter)
+          }
+        >
+          <option value="all">All badges</option>
+          <option value="Apprentice">Apprentice</option>
+          <option value="Artisan">Artisan</option>
+          <option value="Master">Master</option>
+        </select>
+      </div>
+      <p id="mastery-badge-help">
+        Filter by the next unearned badge, not badges already earned.
+      </p>
       <label className="mastery-filter">
         <input
           type="checkbox"
@@ -89,12 +113,16 @@ export const KitchenMastery = memo(function KitchenMastery() {
         Owned restaurants closest by remaining levels first; not a cost or time
         estimate.
       </p>
-      {(query.length > 0 || hideCompleted || nearestFirst) && (
+      {(query.length > 0 ||
+        hideCompleted ||
+        nearestFirst ||
+        badge !== 'all') && (
         <Button
           type="button"
           className="secondary mastery-reset-view"
           onClick={() => {
             setQuery('');
+            setBadge('all');
             setHideCompleted(false);
             setNearestFirst(false);
             searchInput.current?.focus();
@@ -131,6 +159,7 @@ export const KitchenMastery = memo(function KitchenMastery() {
             hideCompleted={hideCompleted}
             nearestFirst={nearestFirst}
             query={query}
+            badge={badge}
             onBackToSearch={() => focusMasteryTarget(searchInput.current)}
           />
         ))}
@@ -144,12 +173,14 @@ function StreetSummary({
   hideCompleted,
   nearestFirst,
   query,
+  badge,
   onBackToSearch,
 }: {
   street: Neighborhood;
   hideCompleted: boolean;
   nearestFirst: boolean;
   query: string;
+  badge: MasteryBadgeFilter;
   onBackToSearch: () => void;
 }) {
   // Shallow numeric results exclude register, currency and clock changes.
@@ -173,7 +204,10 @@ function StreetSummary({
             return restaurantMastery(owned, level).target !== 0;
           })
         : catalog;
-      return masterySearch(incomplete, query);
+      return masterySearch(
+        masteryBadgeFilter(s.data.restaurants, incomplete, badge),
+        query,
+      );
     }),
   );
   return (
@@ -204,11 +238,15 @@ function StreetSummary({
         </summary>
         {visibleRestaurants.length === 0 && (
           <p>
-            {query.trim()
-              ? hideCompleted
-                ? 'No unfinished restaurants match search.'
-                : 'No restaurants match search.'
-              : 'All restaurants mastered.'}
+            {badge !== 'all'
+              ? query.trim()
+                ? 'No restaurants match the selected next badge and search.'
+                : `No restaurants have ${badge} as their next badge.`
+              : query.trim()
+                ? hideCompleted
+                  ? 'No unfinished restaurants match search.'
+                  : 'No restaurants match search.'
+                : 'All restaurants mastered.'}
           </p>
         )}
         <ul className="mastery-list">

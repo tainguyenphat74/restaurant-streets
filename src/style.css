@@ -1014,10 +1014,28 @@ nav button.active {
   border-top: 1px solid #f0e9df;
 }
 
-.street-switch { position: static; display: flex; flex-wrap: wrap; justify-content: flex-start; gap: 8px; pointer-events: auto; }
-.street-switch button { min-height: 44px; padding: 8px 12px; border-radius: 16px; background: white; font-weight: 700; }
-.street-switch button[aria-pressed="true"] { background: #E8553A; color: white; }
-.street-switch button:disabled { opacity: .6; }
+.street-switch {
+  position: static;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  gap: 8px;
+  pointer-events: auto;
+}
+.street-switch button {
+  min-height: 44px;
+  padding: 8px 12px;
+  border-radius: 16px;
+  background: white;
+  font-weight: 700;
+}
+.street-switch button[aria-pressed='true'] {
+  background: #e8553a;
+  color: white;
+}
+.street-switch button:disabled {
+  opacity: 0.6;
+}
 
 .street-honors {
   margin-block: 1.5rem;
@@ -1046,7 +1064,8 @@ nav button.active {
 .mastery-search label {
   flex-basis: 100%;
 }
-.mastery-search input {
+.mastery-search input,
+.mastery-search select {
   flex: 1 1 160px;
   width: 100%;
   min-width: 44px;
@@ -1096,7 +1115,8 @@ nav button.active {
   text-decoration: underline;
   overflow-wrap: anywhere;
 }
-.mastery-search input:focus-visible {
+.mastery-search input:focus-visible,
+.mastery-search select:focus-visible {
   outline: 3px solid #254f50;
   outline-offset: 2px;
 }

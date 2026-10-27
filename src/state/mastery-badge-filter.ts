@@ -1,13 +1,16 @@
 import type { GameData } from './economy';
-import type { restaurantMastery } from './mastery';
+import { restaurantMastery } from './mastery';
 
 export type MasteryBadgeFilter =
   'all' | Exclude<ReturnType<typeof restaurantMastery>['next'], ''>;
 
 export function masteryBadgeFilter<T extends { id: string }>(
-  _progress: GameData['restaurants'],
+  progress: GameData['restaurants'],
   catalog: readonly T[],
-  _badge: MasteryBadgeFilter,
+  badge: MasteryBadgeFilter,
 ): T[] {
-  return [...catalog];
+  return catalog.filter((restaurant) => {
+    const { owned, level } = progress[restaurant.id];
+    return badge === 'all' || restaurantMastery(owned, level).next === badge;
+  });
 }
