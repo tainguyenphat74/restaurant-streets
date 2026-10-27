@@ -5,7 +5,9 @@ import { masteryBadgeFilter } from './mastery-badge-filter';
 import { masteryOrder } from './mastery-order';
 import { masterySearch } from './mastery-search';
 
-const catalog = neighborhoods.flatMap((s) => s.restaurants);
+const catalog = neighborhoods.flatMap<{ id: string; name: string }>(
+  (s) => s.restaurants,
+);
 it.each([
   [false, 0, 'Apprentice'],
   [false, 100, 'Apprentice'],
