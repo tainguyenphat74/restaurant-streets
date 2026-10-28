@@ -355,6 +355,7 @@ try {
         coins: 123456.25,
         gems: 42,
         upgrades: ['ingredients'],
+        boostUntil: initial.savedAt + 300000,
       });
       [100, 50, 25, 25, 25, 99].forEach((level, i) =>
         Object.assign(partial.restaurants[streets[0][1][i]], {
@@ -362,6 +363,12 @@ try {
           level,
         }),
       );
+      // A managed zero register avoids the intentional sweep even at zero time.
+      Object.assign(partial.restaurants.noodle_nook, {
+        hasManager: true,
+        register: 0,
+      });
+      // Positive pendingOffline opens a blocking reward modal after Settings.
       partial.neighborhood.unlockedStreets = [
         'maple_street',
         'riverside_market',
@@ -449,8 +456,8 @@ try {
       );
       async function choose(value) {
         const rect = await layout(badge);
-        await retained(async () => {
-          if (mobile) {
+        if (mobile) {
+          await retained(async () => {
             await page.touchscreen.tap(
               rect.x + rect.width / 2,
               rect.y + rect.height / 2,
@@ -458,18 +465,20 @@ try {
             // Native popup choices are OS-owned; Playwright's supported select API.
             await badge.selectOption(value);
             await page.keyboard.press('Escape');
-          } else {
-            await tabTo(badge);
-            await visibleFocus(badge);
-            await page.keyboard.press('Home');
-            const index = ['all', 'Apprentice', 'Artisan', 'Master'].indexOf(
-              value,
-            );
-            for (let n = 0; n < index; n++)
-              await page.keyboard.press('ArrowDown');
-            await page.keyboard.press('Enter');
-          }
-        });
+          });
+        } else {
+          await tabTo(badge);
+          await visibleFocus(badge);
+          // Each native selection can remove rows and later re-add them.
+          // Only rows surviving that individual change must retain identity.
+          await retained(() => page.keyboard.press('Home'));
+          const index = ['all', 'Apprentice', 'Artisan', 'Master'].indexOf(
+            value,
+          );
+          for (let n = 0; n < index; n++)
+            await retained(() => page.keyboard.press('ArrowDown'));
+          await retained(() => page.keyboard.press('Enter'));
+        }
         await expect(badge).toHaveValue(value);
       }
       await defaults(partial, false);
@@ -507,6 +516,48 @@ try {
       await query(' NOODLE ');
       await results([1, 0], locked);
       await resetView(locked);
+
+      // Hold the mounted badge selection fixed across Restore in both directions.
+      // All Maple levels stay >=25, preserving strict Riverside unlock validity.
+      for (const [low, high, values] of [
+        [24, 25, ['Apprentice', 'Artisan']],
+        [49, 50, ['Artisan', 'Master']],
+        [99, 100, ['Master']],
+      ]) {
+        for (const value of values) {
+          await choose(value);
+          for (const level of [low, high, low]) {
+            const boundary = structuredClone(partial);
+            Object.assign(boundary.restaurants.river_grill, {
+              owned: true,
+              level,
+              register: 0,
+            });
+            await retained(() => restore(boundary));
+            // Assert membership before any further selection interaction.
+            await expect(badge).toHaveValue(value);
+            const next =
+              level < 25
+                ? 'Apprentice'
+                : level < 50
+                  ? 'Artisan'
+                  : level < 100
+                    ? 'Master'
+                    : '';
+            const maple =
+              value === 'Apprentice'
+                ? []
+                : value === 'Artisan'
+                  ? [2, 3, 4]
+                  : [1, 5];
+            const river = value === 'Apprentice' ? [1] : [];
+            if (next === value) river.unshift(0);
+            await ordered(0, maple);
+            await ordered(1, river);
+            await results([maple.length, river.length], boundary);
+          }
+        }
+      }
 
       // Unlocked Riverside accepts all seven boundaries through normal Restore.
       for (const level of [0, 24, 25, 49, 50, 99, 100]) {
